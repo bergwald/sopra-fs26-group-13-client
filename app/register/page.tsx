@@ -108,7 +108,7 @@ const Register: React.FC = () => {
           <Button
             type="primary"
             htmlType="submit"
-            className="login-button"
+            className="auth-button"
             loading={isSubmitting}
           >
             Register
@@ -119,7 +119,7 @@ const Register: React.FC = () => {
         <Form.Item>
           <Button
             type="default"
-            className="login-button"
+            className="auth-button"
             onClick={() => router.push("/login")}
           >
             Go to login

@@ -42,7 +42,7 @@ const Login: React.FC = () => {
       router.push("/users");
     } catch (error) {
       const appError = error as ApplicationError;
-      
+
       if (appError.status === 401) {
         alert("Invalid username or password.");
       } else if (error instanceof Error) {
@@ -84,7 +84,7 @@ const Login: React.FC = () => {
           <Button
             type="primary"
             htmlType="submit"
-            className="login-button"
+            className="auth-button"
             loading={isSubmitting}
           >
             Login
@@ -93,7 +93,7 @@ const Login: React.FC = () => {
         <Form.Item>
           <Button
             type="default"
-            className="login-button"
+            className="auth-button"
             onClick={() => router.push("/register")}
           >
             Register
