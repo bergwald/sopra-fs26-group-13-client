@@ -76,6 +76,13 @@ export default function Home() {
           <Button
             type="primary"
             variant="solid"
+            onClick={() => router.push("/register")}
+          >
+            Register
+          </Button>
+          <Button
+            type="primary"
+            variant="solid"
             onClick={() => router.push("/login")}
           >
             Go to login
