@@ -100,7 +100,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className="card-container">
       <Card
-        title="Get all users from secure endpoint:"
+        title="Users Overview"
         loading={!users}
         className="dashboard-container"
       >

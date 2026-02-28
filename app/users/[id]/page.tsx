@@ -99,7 +99,7 @@ const Profile: React.FC = () => {
   return (
     <div className="card-container">
       <Card
-        title={user ? `User ${user.username}` : "Loading user..."}
+        title={user ? `Profile of user ${user.username}` : "Loading user..."}
         loading={!user}
         className="dashboard-container"
       >
