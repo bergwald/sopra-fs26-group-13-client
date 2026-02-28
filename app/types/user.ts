@@ -6,3 +6,10 @@ export interface User {
   token?: string;
   status: "ONLINE" | "OFFLINE" | string;
 }
+
+export interface RegisterRequest {
+  name: string;
+  username: string;
+  password: string;
+  bio?: string;
+}
