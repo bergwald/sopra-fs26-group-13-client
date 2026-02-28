@@ -5,8 +5,9 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useApi } from "@/hooks/useApi";
-import useLocalStorage from "@/hooks/useLocalStorage";
+import { ApplicationError } from "@/types/error";
 import { User } from "@/types/user";
+import { clearStoredToken, getStoredToken } from "@/utils/auth";
 import { Button, Card, Table } from "antd";
 import type { TableProps } from "antd"; // antd component library allows imports of types
 // Optionally, you can import a CSS module or file for additional styling:
@@ -35,30 +36,53 @@ const Dashboard: React.FC = () => {
   const router = useRouter();
   const apiService = useApi();
   const [users, setUsers] = useState<User[] | null>(null);
-  // useLocalStorage hook example use
-  // The hook returns an object with the value and two functions
-  // Simply choose what you need from the hook:
-  const {
-    // value: token, // is commented out because we dont need to know the token value for logout
-    // set: setToken, // is commented out because we dont need to set or update the token value
-    clear: clearToken, // all we need in this scenario is a method to clear the token
-  } = useLocalStorage<string>("token", ""); // if you wanted to select a different token, i.e "lobby", useLocalStorage<string>("lobby", "");
+  const [authToken, setAuthToken] = useState<string>("");
 
-  const handleLogout = (): void => {
-    // Clear token using the returned function 'clear' from the hook
-    clearToken();
-    router.push("/login");
+  const handleLogout = async (): Promise<void> => {
+    try {
+      if (authToken) {
+        await apiService.post<void>("/logout", undefined, {
+          Authorization: `Bearer ${authToken}`,
+        });
+      }
+    } catch {
+      // We still clear local auth state even if logout request fails.
+    } finally {
+      clearStoredToken();
+      router.push("/");
+    }
   };
 
   useEffect(() => {
+    const token = getStoredToken();
+
+    if (!token) {
+      clearStoredToken();
+      router.replace("/");
+      return;
+    }
+
+    setAuthToken(token);
+
     const fetchUsers = async () => {
       try {
         // apiService.get<User[]> returns the parsed JSON object directly,
         // thus we can simply assign it to our users variable.
-        const users: User[] = await apiService.get<User[]>("/users");
+        const users: User[] = await apiService.get<User[]>("/users", {
+          Authorization: `Bearer ${token}`,
+        });
         setUsers(users);
         console.log("Fetched users:", users);
       } catch (error) {
+        const appError = error as ApplicationError;
+
+        // Handle HTTP 401 erros (unauthorized)
+        if (appError.status === 401) {
+          clearStoredToken();
+          router.replace("/");
+          return;
+        }
+
         if (error instanceof Error) {
           alert(`Something went wrong while fetching users:\n${error.message}`);
         } else {
@@ -68,7 +92,7 @@ const Dashboard: React.FC = () => {
     };
 
     fetchUsers();
-  }, [apiService]); // dependency apiService does not re-trigger the useEffect on every render because the hook uses memoization (check useApi.tsx in the hooks).
+  }, [apiService, router]); // dependency apiService does not re-trigger the useEffect on every render because the hook uses memoization (check useApi.tsx in the hooks).
   // if the dependency array is left empty, the useEffect will trigger exactly once
   // if the dependency array is left away, the useEffect will run on every state change. Since we do a state change to users in the useEffect, this results in an infinite loop.
   // read more here: https://react.dev/reference/react/useEffect#specifying-reactive-dependencies
@@ -82,7 +106,6 @@ const Dashboard: React.FC = () => {
       >
         {users && (
           <>
-            {/* antd Table: pass the columns and data, plus a rowKey for stable row identity */}
             <Table<User>
               columns={columns}
               dataSource={users}
