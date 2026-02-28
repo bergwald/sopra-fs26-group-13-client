@@ -1,22 +1,21 @@
 "use client"; // For components that need React hooks and browser APIs, SSR (server side rendering) has to be disabled. Read more here: https://nextjs.org/docs/pages/building-your-application/rendering/server-side-rendering
 
+import React from "react";
 import { useRouter } from "next/navigation"; // use NextJS router for navigation
 import { useApi } from "@/hooks/useApi";
 import useLocalStorage from "@/hooks/useLocalStorage";
-import { User } from "@/types/user";
+import { ApplicationError } from "@/types/error";
+import { LoginRequest, User } from "@/types/user";
 import { Button, Form, Input } from "antd";
 // Optionally, you can import a CSS module or file for additional styling:
 // import styles from "@/styles/page.module.css";
-
-interface FormFieldProps {
-  label: string;
-  value: string;
-}
 
 const Login: React.FC = () => {
   const router = useRouter();
   const apiService = useApi();
   const [form] = Form.useForm();
+  const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
+
   // useLocalStorage hook example use
   // The hook returns an object with the value and two functions
   // Simply choose what you need from the hook:
@@ -27,10 +26,12 @@ const Login: React.FC = () => {
   } = useLocalStorage<string>("token", ""); // note that the key we are selecting is "token" and the default value we are setting is an empty string
   // if you want to pick a different token, i.e "usertoken", the line above would look as follows: } = useLocalStorage<string>("usertoken", "");
 
-  const handleLogin = async (values: FormFieldProps) => {
+  const handleLogin = async (values: LoginRequest) => {
+    setIsSubmitting(true);
+
     try {
       // Call the API service and let it handle JSON serialization and error handling
-      const response = await apiService.post<User>("/users", values);
+      const response = await apiService.post<User>("/login", values);
 
       // Use the useLocalStorage hook that returned a setter function (setToken in line 41) to store the token if available
       if (response.token) {
@@ -40,11 +41,17 @@ const Login: React.FC = () => {
       // Navigate to the user overview
       router.push("/users");
     } catch (error) {
-      if (error instanceof Error) {
+      const appError = error as ApplicationError;
+      
+      if (appError.status === 401) {
+        alert("Invalid username or password.");
+      } else if (error instanceof Error) {
         alert(`Something went wrong during the login:\n${error.message}`);
       } else {
         console.error("An unknown error occurred during login.");
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -66,14 +73,20 @@ const Login: React.FC = () => {
           <Input placeholder="Enter username" />
         </Form.Item>
         <Form.Item
-          name="name"
-          label="Name"
-          rules={[{ required: true, message: "Please input your name!" }]}
+          name="password"
+          label="Password"
+          rules={[{ required: true, message: "Please input your password!" }]}
         >
-          <Input placeholder="Enter name" />
+          <Input.Password placeholder="Enter password" />
         </Form.Item>
+
         <Form.Item>
-          <Button type="primary" htmlType="submit" className="login-button">
+          <Button
+            type="primary"
+            htmlType="submit"
+            className="login-button"
+            loading={isSubmitting}
+          >
             Login
           </Button>
         </Form.Item>
