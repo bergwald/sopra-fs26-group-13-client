@@ -14,6 +14,22 @@ export class ApiService {
   }
 
   /**
+   * Merge default headers with request-specific headers.
+   */
+  private buildHeaders(headers?: HeadersInit): Headers {
+    const mergedHeaders = new Headers(this.defaultHeaders);
+
+    if (headers) {
+      const requestHeaders = new Headers(headers);
+      requestHeaders.forEach((value, key) => {
+        mergedHeaders.set(key, value);
+      });
+    }
+
+    return mergedHeaders;
+  }
+
+  /**
    * Helper function to check the response, parse JSON,
    * and throw an error if the response is not OK.
    *
@@ -26,6 +42,10 @@ export class ApiService {
     res: Response,
     errorMessage: string,
   ): Promise<T> {
+    if (res.status === 204) {
+      return undefined as T;
+    }
+
     if (!res.ok) {
       let errorDetail = res.statusText;
       try {
@@ -60,11 +80,11 @@ export class ApiService {
    * @param endpoint - The API endpoint (e.g. "/users").
    * @returns JSON data of type T.
    */
-  public async get<T>(endpoint: string): Promise<T> {
+  public async get<T>(endpoint: string, headers?: HeadersInit): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     const res = await fetch(url, {
       method: "GET",
-      headers: this.defaultHeaders,
+      headers: this.buildHeaders(headers),
     });
     return this.processResponse<T>(
       res,
@@ -78,12 +98,16 @@ export class ApiService {
    * @param data - The payload to post.
    * @returns JSON data of type T.
    */
-  public async post<T>(endpoint: string, data: unknown): Promise<T> {
+  public async post<T>(
+    endpoint: string,
+    data?: unknown,
+    headers?: HeadersInit,
+  ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     const res = await fetch(url, {
       method: "POST",
-      headers: this.defaultHeaders,
-      body: JSON.stringify(data),
+      headers: this.buildHeaders(headers),
+      body: data === undefined ? undefined : JSON.stringify(data),
     });
     return this.processResponse<T>(
       res,
@@ -97,11 +121,15 @@ export class ApiService {
    * @param data - The payload to update.
    * @returns JSON data of type T.
    */
-  public async put<T>(endpoint: string, data: unknown): Promise<T> {
+  public async put<T>(
+    endpoint: string,
+    data: unknown,
+    headers?: HeadersInit,
+  ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     const res = await fetch(url, {
       method: "PUT",
-      headers: this.defaultHeaders,
+      headers: this.buildHeaders(headers),
       body: JSON.stringify(data),
     });
     return this.processResponse<T>(
@@ -115,11 +143,11 @@ export class ApiService {
    * @param endpoint - The API endpoint (e.g. "/users/123").
    * @returns JSON data of type T.
    */
-  public async delete<T>(endpoint: string): Promise<T> {
+  public async delete<T>(endpoint: string, headers?: HeadersInit): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     const res = await fetch(url, {
       method: "DELETE",
-      headers: this.defaultHeaders,
+      headers: this.buildHeaders(headers),
     });
     return this.processResponse<T>(
       res,
