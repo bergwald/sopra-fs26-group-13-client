@@ -13,3 +13,8 @@ export interface RegisterRequest {
   password: string;
   bio?: string;
 }
+
+export interface LoginRequest {
+  username: string;
+  password: string;
+}
