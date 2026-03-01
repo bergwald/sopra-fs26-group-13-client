@@ -101,6 +101,17 @@ const Profile: React.FC = () => {
       : `Profile of user ${user.username}`;
   }
   const isOwnProfile = user?.id === currentUserId;
+  const renderStatus = (status: User["status"]) => {
+    if (status === "ONLINE") {
+      return <span style={{ color: "#52c41a", fontWeight: 600 }}>{status}</span>;
+    }
+
+    if (status === "OFFLINE") {
+      return <span style={{ color: "#ff4d4f", fontWeight: 600 }}>{status}</span>;
+    }
+
+    return status;
+  };
 
   return (
     <div className="card-container">
@@ -117,7 +128,7 @@ const Profile: React.FC = () => {
                 {user.username}
               </Descriptions.Item>
               <Descriptions.Item label="Status">
-                {user.status}
+                {renderStatus(user.status)}
               </Descriptions.Item>
               <Descriptions.Item label="Bio">
                 {user.bio || "No bio provided"}
