@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
-import { App as AntdApp, Alert, Button, Form, Input } from "antd";
+import { Alert, Button, Form, Input } from "antd";
 import { useApi } from "@/hooks/useApi";
 import { ApplicationError } from "@/types/error";
 import { ChangePasswordRequest } from "@/types/user";
@@ -21,7 +21,6 @@ const ChangePasswordPage: React.FC = () => {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const apiService = useApi();
-  const { message } = AntdApp.useApp();
   const [form] = Form.useForm<ChangePasswordFormValues>();
   const [isAuthChecked, setIsAuthChecked] = React.useState<boolean>(false);
   const [currentUserId, setCurrentUserId] = React.useState<number | null>(null);
@@ -76,12 +75,10 @@ const ChangePasswordPage: React.FC = () => {
         Authorization: `Bearer ${token}`,
       });
 
-      await message.success(
-        "Password changed successfully. Please log in again.",
-        1,
-      );
       // Backend clears the token; clear local auth and force fresh login.
       clearStoredAuth();
+      // The user must acknowledge the success before being redirected.
+      alert("Password changed successfully. Please log in again.");
       router.replace("/login");
     } catch (error) {
       const appError = error as ApplicationError;
