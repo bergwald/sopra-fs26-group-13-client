@@ -16,6 +16,11 @@ import type { TableProps } from "antd"; // antd component library allows imports
 // Columns for the antd table of User objects
 const columns: TableProps<User>["columns"] = [
   {
+    title: "Id",
+    dataIndex: "id",
+    key: "id",
+  },
+  {
     title: "Username",
     dataIndex: "username",
     key: "username",
@@ -26,9 +31,9 @@ const columns: TableProps<User>["columns"] = [
     key: "name",
   },
   {
-    title: "Id",
-    dataIndex: "id",
-    key: "id",
+    title: "Status",
+    dataIndex: "status",
+    key: "status",
   },
 ];
 
