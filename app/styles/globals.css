@@ -61,6 +61,10 @@ a {
   background-color: rgb(41, 44, 59);
 }
 
+.dashboard-container {
+  min-width: 25vw;
+}
+
 .profile-descriptions .ant-descriptions-item-label {
   color: #fff !important;
 }
