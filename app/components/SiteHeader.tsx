@@ -87,7 +87,13 @@ const SiteHeader: React.FC = () => {
               Profile
             </Link>
           )}
-          <Button type="primary" onClick={handleLogout} loading={isLoggingOut}>
+          <Button
+            type="primary"
+            color="red"
+            variant="solid"
+            onClick={handleLogout}
+            loading={isLoggingOut}
+          >
             Logout
           </Button>
         </div>
