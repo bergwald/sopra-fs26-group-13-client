@@ -5,6 +5,7 @@ export interface User {
   bio: string;
   token?: string;
   status: "ONLINE" | "OFFLINE" | string;
+  creationDate?: string;
 }
 
 export interface RegisterRequest {

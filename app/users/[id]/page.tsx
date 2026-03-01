@@ -97,6 +97,9 @@ const Profile: React.FC = () => {
               <Descriptions.Item label="Bio">
                 {user.bio || "No bio provided"}
               </Descriptions.Item>
+              <Descriptions.Item label="Registration Date">
+                {user.creationDate}
+              </Descriptions.Item>
             </Descriptions>
 
             <Space>
