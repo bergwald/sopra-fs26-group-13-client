@@ -7,6 +7,7 @@ import useLocalStorage from "@/hooks/useLocalStorage";
 import useRedirectIfAuthenticated from "@/hooks/useRedirectIfAuthenticated";
 import { ApplicationError } from "@/types/error";
 import { LoginRequest, User } from "@/types/user";
+import { setStoredCurrentUserId } from "@/utils/auth";
 import { Button, Form, Input } from "antd";
 // Optionally, you can import a CSS module or file for additional styling:
 // import styles from "@/styles/page.module.css";
@@ -35,9 +36,10 @@ const Login: React.FC = () => {
       // Call the API service and let it handle JSON serialization and error handling
       const response = await apiService.post<User>("/login", values);
 
-      // Use the useLocalStorage hook that returned a setter function (setToken in line 41) to store the token if available
-      if (response.token) {
+      // Persist the token and current user ID
+      if (response.token && response.id) {
         setToken(response.token);
+        setStoredCurrentUserId(response.id);
       }
 
       // Navigate to the user overview
