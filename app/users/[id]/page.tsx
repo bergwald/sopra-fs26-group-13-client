@@ -29,6 +29,7 @@ const Profile: React.FC = () => {
   const params = useParams<{ id: string }>();
   const apiService = useApi();
   const [user, setUser] = useState<User | null>(null);
+  const [currentUserId, setCurrentUserIdState] = useState<number | null>(null);
 
   const userId = Array.isArray(params.id) ? params.id[0] : params.id;
   const formattedCreationDate = user?.creationDate
@@ -54,6 +55,8 @@ const Profile: React.FC = () => {
       router.replace("/users");
       return;
     }
+
+    setCurrentUserIdState(storedCurrentUserId);
 
     // Function to fetch user data from the backend
     const fetchUser = async () => {
@@ -90,10 +93,18 @@ const Profile: React.FC = () => {
     fetchUser();
   }, [apiService, router, userId]);
 
+  let profileTitle = "Loading user...";
+  if (user) {
+    // Show a custom title when the logged-in user views their own profile.
+    profileTitle = user.id === currentUserId
+      ? "Your Profile"
+      : `Profile of user ${user.username}`;
+  }
+
   return (
     <div className="card-container">
       <Card
-        title={user ? `Profile of user ${user.username}` : "Loading user..."}
+        title={profileTitle}
         loading={!user}
         className="dashboard-container profile-card"
       >
