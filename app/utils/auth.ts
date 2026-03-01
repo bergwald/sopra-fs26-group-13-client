@@ -1,4 +1,5 @@
 const AUTH_TOKEN_STORAGE_KEY = "token";
+const AUTH_CURRENT_USER_ID_STORAGE_KEY = "currentUserId";
 export const AUTH_TOKEN_CHANGED_EVENT = "auth-token-changed";
 
 function emitAuthTokenChanged(): void {
@@ -110,5 +111,19 @@ export function clearStoredToken(): void {
   }
 
   globalThis.localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+  emitAuthTokenChanged();
+}
+
+/**
+ * Clears token and current-user ID together.
+ * Used when the session must be invalidated completely.
+ */
+export function clearStoredAuth(): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  globalThis.localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+  globalThis.localStorage.removeItem(AUTH_CURRENT_USER_ID_STORAGE_KEY);
   emitAuthTokenChanged();
 }
