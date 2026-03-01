@@ -129,7 +129,7 @@ const Profile: React.FC = () => {
             <Space>
               {/* Button to the user overview page */}
               <Button type="default" onClick={() => router.push("/users")}>
-                Back to users
+                Users Overview
               </Button>
             </Space>
           </Space>
