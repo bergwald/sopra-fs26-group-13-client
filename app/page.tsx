@@ -88,6 +88,17 @@ export default function Home() {
           >
             Read our docs
           </Button>
+          {hasToken && (
+            <>
+              <Button
+                type="primary"
+                variant="solid"
+                onClick={() => router.push("/users")}
+              >
+                Users Overview
+              </Button>
+            </>
+          )}
           {!hasToken && (
             <>
               <Button
