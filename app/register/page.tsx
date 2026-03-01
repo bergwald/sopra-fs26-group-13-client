@@ -2,11 +2,11 @@
 "use client";
 
 import React from "react";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Alert, Button, Form, Input } from "antd";
 import { useApi } from "@/hooks/useApi";
 import useLocalStorage from "@/hooks/useLocalStorage";
+import useRedirectIfAuthenticated from "@/hooks/useRedirectIfAuthenticated";
 import { ApplicationError } from "@/types/error";
 import { RegisterRequest, User } from "@/types/user";
 
@@ -14,8 +14,9 @@ const Register: React.FC = () => {
   const router = useRouter();
   const apiService = useApi();
   const [form] = Form.useForm();
-  const [errorMessage, setErrorMessage] = useState<string>("");
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = React.useState<string>("");
+  const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
+  const isAuthChecked = useRedirectIfAuthenticated("/users");
 
   // On succesfull registration, the user is logged-in
   // A session token is stored in local storage
@@ -38,7 +39,6 @@ const Register: React.FC = () => {
         setToken(response.token);
       }
       router.push(`/users/${response.id}`);
-    
     } catch (error) {
       const appError = error as ApplicationError;
 
@@ -55,6 +55,10 @@ const Register: React.FC = () => {
       setIsSubmitting(false);
     }
   };
+
+  if (!isAuthChecked) {
+    return null;
+  }
 
   return (
     <div className="login-container">

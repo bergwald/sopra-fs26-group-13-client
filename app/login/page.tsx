@@ -4,6 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation"; // use NextJS router for navigation
 import { useApi } from "@/hooks/useApi";
 import useLocalStorage from "@/hooks/useLocalStorage";
+import useRedirectIfAuthenticated from "@/hooks/useRedirectIfAuthenticated";
 import { ApplicationError } from "@/types/error";
 import { LoginRequest, User } from "@/types/user";
 import { Button, Form, Input } from "antd";
@@ -15,6 +16,7 @@ const Login: React.FC = () => {
   const apiService = useApi();
   const [form] = Form.useForm();
   const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
+  const isAuthChecked = useRedirectIfAuthenticated("/users");
 
   // useLocalStorage hook example use
   // The hook returns an object with the value and two functions
@@ -54,6 +56,10 @@ const Login: React.FC = () => {
       setIsSubmitting(false);
     }
   };
+
+  if (!isAuthChecked) {
+    return null;
+  }
 
   return (
     <div className="login-container">
