@@ -38,6 +38,17 @@ const columns: TableProps<User>["columns"] = [
     title: "Status",
     dataIndex: "status",
     key: "status",
+    render: (status: User["status"]) => {
+      if (status === "ONLINE") {
+        return <span style={{ color: "#52c41a", fontWeight: 600 }}>{status}</span>;
+      }
+
+      if (status === "OFFLINE") {
+        return <span style={{ color: "#ff4d4f", fontWeight: 600 }}>{status}</span>;
+      }
+
+      return status;
+    },
   },
 ];
 
