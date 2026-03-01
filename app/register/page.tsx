@@ -9,6 +9,7 @@ import useLocalStorage from "@/hooks/useLocalStorage";
 import useRedirectIfAuthenticated from "@/hooks/useRedirectIfAuthenticated";
 import { ApplicationError } from "@/types/error";
 import { RegisterRequest, User } from "@/types/user";
+import { setStoredCurrentUserId } from "@/utils/auth";
 
 const Register: React.FC = () => {
   const router = useRouter();
@@ -33,10 +34,11 @@ const Register: React.FC = () => {
         bio: values.bio?.trim() ?? "",
       });
 
-      // If succesful, store session token in local storage and
+      // If succesful, store session token and user ID in local storage and
       // redirect to the user page of the new user
       if (response.token) {
         setToken(response.token);
+        setStoredCurrentUserId(response.id);
       }
       router.push(`/users/${response.id}`);
     } catch (error) {
