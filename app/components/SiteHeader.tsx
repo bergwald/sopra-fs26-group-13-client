@@ -84,7 +84,7 @@ const SiteHeader: React.FC = () => {
           {/* Direct link to the logged-in user's own profile page. */}
           {currentUserId && (
             <Link href={`/users/${currentUserId}`} className="site-profile-link">
-              Your Profile
+              Profile
             </Link>
           )}
           <Button type="primary" onClick={handleLogout} loading={isLoggingOut}>
