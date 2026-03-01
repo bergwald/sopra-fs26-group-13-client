@@ -65,8 +65,24 @@ a {
   min-width: 25vw;
 }
 
+.profile-card {
+  width: fit-content;
+}
+
+.profile-content {
+  width: 100%;
+}
+
 .profile-descriptions .ant-descriptions-item-label {
   color: #fff !important;
+}
+
+.profile-descriptions {
+  width: 100% !important;
+}
+
+.profile-descriptions .ant-descriptions-view {
+  width: 100%;
 }
 
 .site-header {

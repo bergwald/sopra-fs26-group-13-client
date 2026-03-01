@@ -89,10 +89,10 @@ const Profile: React.FC = () => {
       <Card
         title={user ? `Profile of user ${user.username}` : "Loading user..."}
         loading={!user}
-        className="dashboard-container"
+        className="dashboard-container profile-card"
       >
         {user && (
-          <Space orientation="vertical" size="large">
+          <Space orientation="vertical" size="large" className="profile-content">
             <Descriptions className="profile-descriptions" column={1} bordered>
               <Descriptions.Item label="Name">{user.name}</Descriptions.Item>
               <Descriptions.Item label="Username">
