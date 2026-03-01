@@ -1,3 +1,6 @@
+# Custom dev build dir
+.next-dev/
+
 # Logs
 logs
 *.log
