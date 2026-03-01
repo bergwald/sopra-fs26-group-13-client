@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "antd";
 import { BookOutlined, CodeOutlined, GlobalOutlined } from "@ant-design/icons";
-import { getStoredToken } from "@/utils/auth";
+import { AUTH_TOKEN_CHANGED_EVENT, getStoredToken } from "@/utils/auth";
 import styles from "@/styles/page.module.css";
 
 export default function Home() {
@@ -15,7 +15,11 @@ export default function Home() {
     const syncTokenState = () => setHasToken(Boolean(getStoredToken()));
     syncTokenState();
     globalThis.addEventListener("storage", syncTokenState);
-    return () => globalThis.removeEventListener("storage", syncTokenState);
+    globalThis.addEventListener(AUTH_TOKEN_CHANGED_EVENT, syncTokenState);
+    return () => {
+      globalThis.removeEventListener("storage", syncTokenState);
+      globalThis.removeEventListener(AUTH_TOKEN_CHANGED_EVENT, syncTokenState);
+    };
   }, []);
 
   return (

@@ -1,4 +1,13 @@
 const AUTH_TOKEN_STORAGE_KEY = "token";
+export const AUTH_TOKEN_CHANGED_EVENT = "auth-token-changed";
+
+function emitAuthTokenChanged(): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  globalThis.dispatchEvent(new Event(AUTH_TOKEN_CHANGED_EVENT));
+}
 
 export function getStoredToken(): string | null {
   if (typeof window === "undefined") {
@@ -22,6 +31,7 @@ export function getStoredToken(): string | null {
   }
 
   globalThis.localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+  emitAuthTokenChanged();
   return null;
 }
 
@@ -31,4 +41,5 @@ export function clearStoredToken(): void {
   }
 
   globalThis.localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+  emitAuthTokenChanged();
 }

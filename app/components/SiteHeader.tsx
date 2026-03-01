@@ -5,7 +5,11 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "antd";
 import { useApi } from "@/hooks/useApi";
-import { clearStoredToken, getStoredToken } from "@/utils/auth";
+import {
+  AUTH_TOKEN_CHANGED_EVENT,
+  clearStoredToken,
+  getStoredToken,
+} from "@/utils/auth";
 
 const SiteHeader: React.FC = () => {
   const pathname = usePathname();
@@ -21,7 +25,11 @@ const SiteHeader: React.FC = () => {
   React.useEffect(() => {
     const syncTokenState = () => setHasToken(Boolean(getStoredToken()));
     globalThis.addEventListener("storage", syncTokenState);
-    return () => globalThis.removeEventListener("storage", syncTokenState);
+    globalThis.addEventListener(AUTH_TOKEN_CHANGED_EVENT, syncTokenState);
+    return () => {
+      globalThis.removeEventListener("storage", syncTokenState);
+      globalThis.removeEventListener(AUTH_TOKEN_CHANGED_EVENT, syncTokenState);
+    };
   }, []);
 
   // Function to logout the user
