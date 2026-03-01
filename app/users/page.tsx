@@ -7,7 +7,11 @@ import { useRouter } from "next/navigation";
 import { useApi } from "@/hooks/useApi";
 import { ApplicationError } from "@/types/error";
 import { User } from "@/types/user";
-import { clearStoredToken, getStoredToken } from "@/utils/auth";
+import {
+  clearStoredAuth,
+  getStoredCurrentUserId,
+  getStoredToken,
+} from "@/utils/auth";
 import { Card, Table } from "antd";
 import type { TableProps } from "antd"; // antd component library allows imports of types
 // Optionally, you can import a CSS module or file for additional styling:
@@ -44,9 +48,11 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     const token = getStoredToken();
+    const currentUserId = getStoredCurrentUserId();
 
-    if (!token) {
-      clearStoredToken();
+    // Token and current-user ID must always exist together in authenticated routes.
+    if (!token || !currentUserId) {
+      clearStoredAuth();
       router.replace("/");
       return;
     }
@@ -65,7 +71,7 @@ const Dashboard: React.FC = () => {
 
         // Handle HTTP 401 erros (unauthorized)
         if (appError.status === 401) {
-          clearStoredToken();
+          clearStoredAuth();
           router.replace("/");
           return;
         }

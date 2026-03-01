@@ -16,7 +16,11 @@ import { useParams, useRouter } from "next/navigation";
 import { useApi } from "@/hooks/useApi";
 import { ApplicationError } from "@/types/error";
 import { User } from "@/types/user";
-import { clearStoredToken, getStoredToken } from "@/utils/auth";
+import {
+  clearStoredAuth,
+  getStoredCurrentUserId,
+  getStoredToken,
+} from "@/utils/auth";
 import { Button, Card, Descriptions, Space } from "antd";
 
 const Profile: React.FC = () => {
@@ -37,9 +41,11 @@ const Profile: React.FC = () => {
 
   useEffect(() => {
     const token = getStoredToken();
+    const storedCurrentUserId = getStoredCurrentUserId();
 
-    if (!token) {
-      clearStoredToken();
+    // Token and current-user ID must always exist together in authenticated routes.
+    if (!token || !storedCurrentUserId) {
+      clearStoredAuth();
       router.replace("/");
       return;
     }
@@ -60,7 +66,7 @@ const Profile: React.FC = () => {
         const appError = error as ApplicationError;
 
         if (appError.status === 401) {
-          clearStoredToken();
+          clearStoredAuth();
           router.replace("/");
           return;
         }
