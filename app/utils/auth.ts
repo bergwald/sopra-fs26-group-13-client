@@ -35,6 +35,75 @@ export function getStoredToken(): string | null {
   return null;
 }
 
+/**
+ * Reads the logged-in user's ID from localStorage.
+ * Invalid values are removed so auth state stays consistent.
+ */
+export function getStoredCurrentUserId(): number | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const rawUserId = globalThis.localStorage.getItem(
+    AUTH_CURRENT_USER_ID_STORAGE_KEY,
+  );
+
+  if (!rawUserId) {
+    return null;
+  }
+
+  try {
+    const parsedUserId = JSON.parse(rawUserId);
+
+    if (
+      typeof parsedUserId === "number" && Number.isInteger(parsedUserId) &&
+      parsedUserId > 0
+    ) {
+      return parsedUserId;
+    }
+  } catch {
+    // Fall through and clear invalid value.
+  }
+
+  globalThis.localStorage.removeItem(AUTH_CURRENT_USER_ID_STORAGE_KEY);
+  emitAuthTokenChanged();
+  return null;
+}
+
+/**
+ * Persists the logged-in user's ID after login/registration.
+ * Non-positive or non-integer values are treated as invalid and removed.
+ */
+export function setStoredCurrentUserId(userId: number): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (Number.isInteger(userId) && userId > 0) {
+    globalThis.localStorage.setItem(
+      AUTH_CURRENT_USER_ID_STORAGE_KEY,
+      JSON.stringify(userId),
+    );
+    emitAuthTokenChanged();
+    return;
+  }
+
+  globalThis.localStorage.removeItem(AUTH_CURRENT_USER_ID_STORAGE_KEY);
+  emitAuthTokenChanged();
+}
+
+/**
+ * Clears only the stored current-user ID.
+ */
+export function clearStoredCurrentUserId(): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  globalThis.localStorage.removeItem(AUTH_CURRENT_USER_ID_STORAGE_KEY);
+  emitAuthTokenChanged();
+}
+
 export function clearStoredToken(): void {
   if (typeof window === "undefined") {
     return;
