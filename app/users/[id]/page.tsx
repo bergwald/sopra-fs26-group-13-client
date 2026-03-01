@@ -100,6 +100,7 @@ const Profile: React.FC = () => {
       ? "Your Profile"
       : `Profile of user ${user.username}`;
   }
+  const isOwnProfile = user?.id === currentUserId;
 
   return (
     <div className="card-container">
@@ -131,6 +132,15 @@ const Profile: React.FC = () => {
               <Button type="default" onClick={() => router.push("/users")}>
                 Users Overview
               </Button>
+              {/* Button to the page to change the password */}
+              {isOwnProfile && currentUserId && (
+                <Button
+                  type="default"
+                  onClick={() => router.push(`/users/${currentUserId}/password`)}
+                >
+                  Change Password
+                </Button>
+              )}
             </Space>
           </Space>
         )}
