@@ -25,25 +25,8 @@ const Profile: React.FC = () => {
   const params = useParams<{ id: string }>();
   const apiService = useApi();
   const [user, setUser] = useState<User | null>(null);
-  const [authToken, setAuthToken] = useState<string>("");
 
   const userId = Array.isArray(params.id) ? params.id[0] : params.id;
-
-  // Function to logout the user
-  const handleLogout = async (): Promise<void> => {
-    try {
-      if (authToken) {
-        await apiService.post<void>("/logout", undefined, {
-          Authorization: `Bearer ${authToken}`,
-        });
-      }
-    } catch {
-      // We still clear local auth state even if logout request fails.
-    } finally {
-      clearStoredToken();
-      router.push("/");
-    }
-  };
 
   useEffect(() => {
     const token = getStoredToken();
@@ -58,8 +41,6 @@ const Profile: React.FC = () => {
       router.replace("/users");
       return;
     }
-
-    setAuthToken(token);
 
     // Function to fetch user data from the backend
     const fetchUser = async () => {
@@ -122,10 +103,6 @@ const Profile: React.FC = () => {
               {/* Button to the user overview page */}
               <Button type="default" onClick={() => router.push("/users")}>
                 Back to users
-              </Button>
-              {/* Logout button */}
-              <Button type="primary" onClick={handleLogout}>
-                Logout
               </Button>
             </Space>
           </Space>

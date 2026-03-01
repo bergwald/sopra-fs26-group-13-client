@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Link from "next/link";
 import { App as AntdApp, ConfigProvider, theme } from "antd";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
+import SiteHeader from "@/components/SiteHeader";
 import "@/styles/globals.css";
 
 const geistSans = Geist({
@@ -63,11 +63,7 @@ export default function RootLayout({
         >
           <AntdRegistry>
             <AntdApp>
-              <header className="site-header">
-                <Link href="/" className="site-home-link">
-                  SoPra M1 Website
-                </Link>
-              </header>
+              <SiteHeader />
               {children}
             </AntdApp>
           </AntdRegistry>

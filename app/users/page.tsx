@@ -8,7 +8,7 @@ import { useApi } from "@/hooks/useApi";
 import { ApplicationError } from "@/types/error";
 import { User } from "@/types/user";
 import { clearStoredToken, getStoredToken } from "@/utils/auth";
-import { Button, Card, Table } from "antd";
+import { Card, Table } from "antd";
 import type { TableProps } from "antd"; // antd component library allows imports of types
 // Optionally, you can import a CSS module or file for additional styling:
 // import "@/styles/views/Dashboard.scss";
@@ -36,22 +36,6 @@ const Dashboard: React.FC = () => {
   const router = useRouter();
   const apiService = useApi();
   const [users, setUsers] = useState<User[] | null>(null);
-  const [authToken, setAuthToken] = useState<string>("");
-
-  const handleLogout = async (): Promise<void> => {
-    try {
-      if (authToken) {
-        await apiService.post<void>("/logout", undefined, {
-          Authorization: `Bearer ${authToken}`,
-        });
-      }
-    } catch {
-      // We still clear local auth state even if logout request fails.
-    } finally {
-      clearStoredToken();
-      router.push("/");
-    }
-  };
 
   useEffect(() => {
     const token = getStoredToken();
@@ -61,8 +45,6 @@ const Dashboard: React.FC = () => {
       router.replace("/");
       return;
     }
-
-    setAuthToken(token);
 
     const fetchUsers = async () => {
       try {
@@ -115,9 +97,6 @@ const Dashboard: React.FC = () => {
                 style: { cursor: "pointer" },
               })}
             />
-            <Button onClick={handleLogout} type="primary">
-              Logout
-            </Button>
           </>
         )}
       </Card>
