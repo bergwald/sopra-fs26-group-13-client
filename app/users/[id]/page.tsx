@@ -27,6 +27,13 @@ const Profile: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
 
   const userId = Array.isArray(params.id) ? params.id[0] : params.id;
+  const formattedCreationDate = user?.creationDate
+    ? new Intl.DateTimeFormat("en-US", {
+      dateStyle: "medium",
+      timeStyle: "short",
+      timeZone: "UTC",
+    }).format(new Date(user.creationDate))
+    : "Unknown";
 
   useEffect(() => {
     const token = getStoredToken();
@@ -98,7 +105,7 @@ const Profile: React.FC = () => {
                 {user.bio || "No bio provided"}
               </Descriptions.Item>
               <Descriptions.Item label="Registration Date">
-                {user.creationDate}
+                {formattedCreationDate}
               </Descriptions.Item>
             </Descriptions>
 
