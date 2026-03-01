@@ -1,12 +1,23 @@
 "use client"; // For components that need React hooks and browser APIs, SSR (server side rendering) has to be disabled. Read more here: https://nextjs.org/docs/pages/building-your-application/rendering/server-side-rendering
+import React from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "antd";
 import { BookOutlined, CodeOutlined, GlobalOutlined } from "@ant-design/icons";
+import { getStoredToken } from "@/utils/auth";
 import styles from "@/styles/page.module.css";
 
 export default function Home() {
   const router = useRouter();
+  const [hasToken, setHasToken] = React.useState<boolean>(false);
+
+  React.useEffect(() => {
+    const syncTokenState = () => setHasToken(Boolean(getStoredToken()));
+    syncTokenState();
+    globalThis.addEventListener("storage", syncTokenState);
+    return () => globalThis.removeEventListener("storage", syncTokenState);
+  }, []);
+
   return (
     <div className={styles.page}>
       <main className={styles.main}>
@@ -73,20 +84,24 @@ export default function Home() {
           >
             Read our docs
           </Button>
-          <Button
-            type="primary"
-            variant="solid"
-            onClick={() => router.push("/register")}
-          >
-            Register
-          </Button>
-          <Button
-            type="primary"
-            variant="solid"
-            onClick={() => router.push("/login")}
-          >
-            Go to login
-          </Button>
+          {!hasToken && (
+            <>
+              <Button
+                type="primary"
+                variant="solid"
+                onClick={() => router.push("/register")}
+              >
+                Register
+              </Button>
+              <Button
+                type="primary"
+                variant="solid"
+                onClick={() => router.push("/login")}
+              >
+                Go to login
+              </Button>
+            </>
+          )}
         </div>
       </main>
       <footer className={styles.footer}>
