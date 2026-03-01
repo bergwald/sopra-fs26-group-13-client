@@ -108,5 +108,13 @@ a {
 .site-header-actions {
   position: absolute;
   right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   pointer-events: auto;
+}
+
+.site-profile-link {
+  color: #ffffff;
+  font-weight: 600;
 }
