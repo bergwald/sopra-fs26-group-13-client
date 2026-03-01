@@ -105,7 +105,7 @@ const Profile: React.FC = () => {
       >
         {user && (
           <Space orientation="vertical" size="large">
-            <Descriptions column={1} bordered>
+            <Descriptions className="profile-descriptions" column={1} bordered>
               <Descriptions.Item label="Name">{user.name}</Descriptions.Item>
               <Descriptions.Item label="Username">
                 {user.username}
