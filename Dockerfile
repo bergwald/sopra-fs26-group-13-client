@@ -1,5 +1,5 @@
 # Build image
-FROM node:22.14.0 as build
+FROM node:22.14.0 AS build
 # Set container working directory to /app
 WORKDIR /app
 # Copy npm instructions
@@ -13,22 +13,25 @@ COPY . .
 # Build the app
 RUN npm run build
 # Delete all non-production dependencies to make copy in line 28 more efficient
-RUN npm prune --production
+RUN npm prune --omit=dev
 
 # Use small production image
-FROM node:22.14.0-alpine
+FROM node:22.14.0-alpine AS runtime
 # Set the env to "production"
-ENV NODE_ENV production
+ENV NODE_ENV=production
 # Set npm cache to a directory the non-root user can access
 RUN npm config set cache /app/.npm-cache --global
-# Get non-root user
-USER 3301
 # Set container working directory to /app
 WORKDIR /app
-# Copy node modules and app
-COPY --chown=node:node --from=build /app/node_modules /app/node_modules
-COPY --chown=node:node --from=build /app/build build
-# Expose port for serve
+# Copy the built Next.js app and production dependencies
+COPY --chown=node:node --from=build /app/package*.json ./
+COPY --chown=node:node --from=build /app/node_modules ./node_modules
+COPY --chown=node:node --from=build /app/.next ./.next
+COPY --chown=node:node --from=build /app/public ./public
+
+# Set a non-root user
+USER node
+# Expose port for Next.js
 EXPOSE 3000
 # Start app
-CMD [ "npx", "serve", "-s", "build" ]
+CMD ["npm", "start", "--", "-H", "0.0.0.0"]

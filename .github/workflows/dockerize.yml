@@ -32,7 +32,7 @@ jobs:
           password: ${{ secrets.dockerhub_password }}
 
       # docker build & push amd64
-      - name: Build and push for x64_86 processor architecture
+      - name: Build and push for x86_64 processor architecture
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -40,5 +40,5 @@ jobs:
           push: true
           tags: ${{secrets.dockerhub_username}}/${{secrets.dockerhub_repo_name}}:intel
           platforms: linux/amd64
-          cache-from: type=registry,ref=${{secrets.dockerhub_username}}/${{secrets.dockerhub_repo_name}}:cache
-          cache-to: type=inline,mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
