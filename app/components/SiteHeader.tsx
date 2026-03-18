@@ -76,7 +76,7 @@ const SiteHeader: React.FC = () => {
   return (
     <header className="site-header">
       <Link href="/" className="site-home-link">
-        SoPra M1 Website
+        SoPra Group 13 M2 Website
       </Link>
 
       {hasToken && (
