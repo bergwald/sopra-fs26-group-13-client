@@ -260,9 +260,21 @@ const Profile: React.FC = () => {
               </Descriptions.Item>
             </Descriptions>
 
-            {errorMessage && <Alert type="error" showIcon message={errorMessage} />}
+            {errorMessage && (
+              <Alert
+                type="error"
+                showIcon
+                message={errorMessage}
+                className="profile-feedback-alert"
+              />
+            )}
             {successMessage && (
-              <Alert type="success" showIcon message={successMessage} />
+              <Alert
+                type="success"
+                showIcon
+                message={successMessage}
+                className="profile-feedback-alert"
+              />
             )}
 
             <Space>

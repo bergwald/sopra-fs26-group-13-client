@@ -82,6 +82,11 @@ a {
   width: 100%;
 }
 
+.profile-feedback-alert .ant-alert-message,
+.profile-feedback-alert .ant-alert-description {
+  color: #1f1f1f !important;
+}
+
 .profile-descriptions .ant-descriptions-item-label {
   color: #fff !important;
 }
