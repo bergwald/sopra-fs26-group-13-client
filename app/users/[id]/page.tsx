@@ -283,7 +283,7 @@ const Profile: React.FC = () => {
                 Users Overview
               </Button>
               {isOwnProfile && !isEditingBio && (
-                <Button type="primary" onClick={handleStartEditingBio}>
+                <Button type="default" onClick={handleStartEditingBio}>
                   Edit Bio
                 </Button>
               )}
