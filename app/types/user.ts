@@ -20,6 +20,7 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface ChangePasswordRequest {
-  newPassword: string;
+export interface UserSelfUpdateRequest {
+  bio?: string;
+  newPassword?: string;
 }

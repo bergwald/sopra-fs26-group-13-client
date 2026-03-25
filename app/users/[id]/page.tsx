@@ -15,13 +15,15 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useApi } from "@/hooks/useApi";
 import { ApplicationError } from "@/types/error";
-import { User } from "@/types/user";
+import { User, UserSelfUpdateRequest } from "@/types/user";
 import {
   clearStoredAuth,
   getStoredCurrentUserId,
   getStoredToken,
 } from "@/utils/auth";
-import { Button, Card, Descriptions, Space } from "antd";
+import { Alert, Button, Card, Descriptions, Input, Space, Typography } from "antd";
+
+const MAX_BIO_LENGTH = 280;
 
 const Profile: React.FC = () => {
   const router = useRouter();
@@ -30,6 +32,12 @@ const Profile: React.FC = () => {
   const apiService = useApi();
   const [user, setUser] = useState<User | null>(null);
   const [currentUserId, setCurrentUserIdState] = useState<number | null>(null);
+  const [bioDraft, setBioDraft] = useState<string>("");
+  const [originalBio, setOriginalBio] = useState<string>("");
+  const [isEditingBio, setIsEditingBio] = useState<boolean>(false);
+  const [isSavingBio, setIsSavingBio] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [successMessage, setSuccessMessage] = useState<string>("");
 
   const userId = Array.isArray(params.id) ? params.id[0] : params.id;
   const formattedCreationDate = user?.creationDate
@@ -39,6 +47,16 @@ const Profile: React.FC = () => {
       timeZone: "UTC",
     }).format(new Date(user.creationDate))
     : "Unknown";
+
+  const fetchUser = React.useCallback(async (token: string, targetUserId: string) => {
+    const fetchedUser = await apiService.get<User>(`/users/${targetUserId}`, {
+      Authorization: `Bearer ${token}`,
+    });
+
+    setUser(fetchedUser);
+    setBioDraft(fetchedUser.bio ?? "");
+    setOriginalBio(fetchedUser.bio ?? "");
+  }, [apiService]);
 
   useEffect(() => {
     const token = getStoredToken();
@@ -59,12 +77,9 @@ const Profile: React.FC = () => {
     setCurrentUserIdState(storedCurrentUserId);
 
     // Function to fetch user data from the backend
-    const fetchUser = async () => {
+    const loadUser = async () => {
       try {
-        const fetchedUser = await apiService.get<User>(`/users/${userId}`, {
-          Authorization: `Bearer ${token}`,
-        });
-        setUser(fetchedUser);
+        await fetchUser(token, userId);
       } catch (error) {
         const appError = error as ApplicationError;
 
@@ -90,8 +105,8 @@ const Profile: React.FC = () => {
       }
     };
 
-    fetchUser();
-  }, [apiService, router, userId]);
+    loadUser();
+  }, [fetchUser, router, userId]);
 
   let profileTitle = "Loading user...";
   if (user) {
@@ -101,6 +116,8 @@ const Profile: React.FC = () => {
       : `Profile of user ${user.username}`;
   }
   const isOwnProfile = user?.id === currentUserId;
+  const isBioChanged = bioDraft !== originalBio;
+  const isBioTooLong = bioDraft.length > MAX_BIO_LENGTH;
   const renderStatus = (status: User["status"]) => {
     if (status === "ONLINE") {
       return <span style={{ color: "#52c41a", fontWeight: 600 }}>{status}</span>;
@@ -111,6 +128,86 @@ const Profile: React.FC = () => {
     }
 
     return status;
+  };
+
+  const handleStartEditingBio = () => {
+    setBioDraft(originalBio);
+    setErrorMessage("");
+    setSuccessMessage("");
+    setIsEditingBio(true);
+  };
+
+  const handleCancelEditingBio = () => {
+    setBioDraft(originalBio);
+    setErrorMessage("");
+    setSuccessMessage("");
+    setIsEditingBio(false);
+  };
+
+  const handleSaveBio = async () => {
+    const token = getStoredToken();
+
+    if (!token || !currentUserId || !userId) {
+      clearStoredAuth();
+      router.replace("/");
+      return;
+    }
+
+    if (!isBioChanged) {
+      return;
+    }
+
+    if (isBioTooLong) {
+      setErrorMessage(`Bio must be at most ${MAX_BIO_LENGTH} characters.`);
+      return;
+    }
+
+    setErrorMessage("");
+    setSuccessMessage("");
+    setIsSavingBio(true);
+
+    try {
+      const payload: UserSelfUpdateRequest = {
+        bio: bioDraft,
+      };
+
+      await apiService.put<void>(`/users/${currentUserId}`, payload, {
+        Authorization: `Bearer ${token}`,
+      });
+
+      await fetchUser(token, userId);
+      setIsEditingBio(false);
+      setSuccessMessage("Bio updated successfully.");
+    } catch (error) {
+      const appError = error as ApplicationError;
+
+      if (appError.status === 401) {
+        clearStoredAuth();
+        router.replace("/");
+        return;
+      }
+
+      if (appError.status === 404) {
+        alert("User not found.");
+        router.replace("/users");
+        return;
+      }
+
+      if (appError.status === 400) {
+        setErrorMessage(
+          `Bio must be at most ${MAX_BIO_LENGTH} characters after trimming.`,
+        );
+        return;
+      }
+
+      if (error instanceof Error) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage("Bio update failed. Please try again.");
+      }
+    } finally {
+      setIsSavingBio(false);
+    }
   };
 
   return (
@@ -131,18 +228,72 @@ const Profile: React.FC = () => {
                 {renderStatus(user.status)}
               </Descriptions.Item>
               <Descriptions.Item label="Bio">
-                {user.bio || "No bio provided"}
+                {isOwnProfile && isEditingBio
+                  ? (
+                    <Space
+                      direction="vertical"
+                      size="small"
+                      className="profile-bio-editor"
+                    >
+                      <Input.TextArea
+                        value={bioDraft}
+                        onChange={(event) => {
+                          setBioDraft(event.target.value);
+                          setErrorMessage("");
+                          setSuccessMessage("");
+                        }}
+                        maxLength={MAX_BIO_LENGTH}
+                        showCount
+                        autoSize={{ minRows: 4, maxRows: 8 }}
+                        placeholder="Tell other players a bit about yourself."
+                      />
+                      <Typography.Text type="secondary">
+                        Whitespace-only bios are allowed and will be stored as
+                        empty.
+                      </Typography.Text>
+                    </Space>
+                  )
+                  : (user.bio || "No bio provided")}
               </Descriptions.Item>
               <Descriptions.Item label="Registration Date">
                 {formattedCreationDate}
               </Descriptions.Item>
             </Descriptions>
 
+            {errorMessage && <Alert type="error" showIcon message={errorMessage} />}
+            {successMessage && (
+              <Alert type="success" showIcon message={successMessage} />
+            )}
+
             <Space>
               {/* Button to the user overview page */}
               <Button type="default" onClick={() => router.push("/users")}>
                 Users Overview
               </Button>
+              {isOwnProfile && !isEditingBio && (
+                <Button type="primary" onClick={handleStartEditingBio}>
+                  Edit Bio
+                </Button>
+              )}
+              {isOwnProfile && isEditingBio && (
+                <>
+                  <Button
+                    type="primary"
+                    onClick={handleSaveBio}
+                    loading={isSavingBio}
+                    disabled={!isBioChanged || isBioTooLong}
+                  >
+                    Save Bio
+                  </Button>
+                  <Button
+                    type="default"
+                    onClick={handleCancelEditingBio}
+                    disabled={isSavingBio}
+                  >
+                    Cancel
+                  </Button>
+                </>
+              )}
               {/* Button to the page to change the password */}
               {isOwnProfile && currentUserId && (
                 <Button

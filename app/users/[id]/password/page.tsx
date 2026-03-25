@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Alert, Button, Form, Input } from "antd";
 import { useApi } from "@/hooks/useApi";
 import { ApplicationError } from "@/types/error";
-import { ChangePasswordRequest } from "@/types/user";
+import { UserSelfUpdateRequest } from "@/types/user";
 import {
   clearStoredAuth,
   getStoredCurrentUserId,
@@ -67,7 +67,7 @@ const ChangePasswordPage: React.FC = () => {
 
     try {
       // Backend contract for PUT /users/{userId}.
-      const payload: ChangePasswordRequest = {
+      const payload: UserSelfUpdateRequest = {
         newPassword: values.newPassword,
       };
 

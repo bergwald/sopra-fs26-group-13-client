@@ -73,6 +73,15 @@ a {
   width: 100%;
 }
 
+.profile-bio-editor {
+  width: 100%;
+}
+
+.profile-bio-editor .ant-input-textarea,
+.profile-bio-editor .ant-input-data-count {
+  width: 100%;
+}
+
 .profile-descriptions .ant-descriptions-item-label {
   color: #fff !important;
 }
