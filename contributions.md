@@ -34,8 +34,8 @@ reason).
 
 | **Student**        | **Date** | **Link to Commit** | **Description**                 | **Relevance**                       |
 | ------------------ | -------- | ------------------ | ------------------------------- | ----------------------------------- |
-| **[@githubUser1]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **@PAKaeser** | 28.03.26   | [Commit 6b79421](https://github.com/bergwald/sopra-fs26-group-13-server/commit/6b794219c04df89b36e11aed6de7904e42dea3ad) | Added a Entity for database representation for game info per round and session | Lets us keep track of game infos like image url or round. |
+|                    | 28.03.26   | [Commit cffae0a](https://github.com/bergwald/sopra-fs26-group-13-server/commit/cffae0a9b9dc8728a57d66270dbb2a8c9f7cd8d6) | Added DTO for game data obj and mapper | Needed for response for GET request during game for each round. |
 | **[@githubUser2]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
 |                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | **[@githubUser3]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
