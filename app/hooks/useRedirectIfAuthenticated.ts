@@ -11,7 +11,7 @@ import { getStoredToken } from "@/utils/auth";
  * @returns `true` once no token was found and the current page may render safely.
  */
 export default function useRedirectIfAuthenticated(
-  redirectPath: string = "/users",
+  redirectPath: string = "/",
 ): boolean {
   const router = useRouter();
   const [isAuthChecked, setIsAuthChecked] = React.useState<boolean>(false);
