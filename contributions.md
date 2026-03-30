@@ -40,9 +40,8 @@ reason).
 |                    | 28.03.26   | [Commit 9c1e490](https://github.com/bergwald/sopra-fs26-group-13-server/commit/9c1e490bd8d3167b4e227a961c1e39c3dd7178a5) | Added Session object which represents the session table in our database | Defines the structure how the session is handled in the database. |
 | **@plaiimade** | 29.03.26  | [Commit 34464cc](https://github.com/bergwald/sopra-fs26-group-13-client/commit/34464cc14f4e90ec1c4b6842e1e2b4d90f71aeae) | Added all blank page folders and files in the frontend | Gives us the underlying structure of the frontend, to continue completing it in the coming weeks |
 |                    | 29.03.26   | [Commit a6b06a7](https://github.com/bergwald/sopra-fs26-group-13-client/commit/a6b06a74bc0a61222f271576ec7d5ab36564c075) | Added proper HTML of first page (/login), serves as inspiration of how the pages will most likely look like | Serves as a visualization of how the frontend pages will look like and means first page is implemented |
-| **[@bergwald]** | 25.03.26   | [Commit 0a89f92](https://github.com/bergwald/sopra-fs26-group-13-server/commit/0a89f927e4b91f3a5adc9369b96f239e04f108f6) | Updated the database tables to ensure that the username is not updatable | Ensures that the username cannot be updated, which is a requirement of one of our user stories. |
-|                 | 25.03.26   | [Commit e45d341](https://github.com/bergwald/sopra-fs26-group-13-server/commit/e45d3411c4de502e25abec458d5dae7f2b187686) | Updated the /users/{userId} route such that the bio of a user can be changed.
-| Allows a user to update his bio through his own profile page. |
+| **@bergwald** | 25.03.26   | [Commit 0a89f92](https://github.com/bergwald/sopra-fs26-group-13-server/commit/0a89f927e4b91f3a5adc9369b96f239e04f108f6) | Updated the database tables to ensure that the username is not updatable | Ensures that the username cannot be updated, which is a requirement of one of our user stories. |
+|                 | 25.03.26   | [Commit e45d341](https://github.com/bergwald/sopra-fs26-group-13-server/commit/e45d3411c4de502e25abec458d5dae7f2b187686) | Updated the /users/{userId} route such that the bio of a user can be changed. | Allows a user to update his bio through his own profile page. |
 
 ---
 
