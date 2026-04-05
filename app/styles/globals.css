@@ -321,6 +321,18 @@ a {
   backdrop-filter: blur(20px);
 }
 
+.register-card {
+  position: relative;
+  width: 100%;
+  max-width: 32rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: 2rem;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 16px 40px 0 rgba(31, 38, 135, 0.07);
+  backdrop-filter: blur(20px);
+}
+
 .login-card-content {
   position: relative;
   z-index: 1;
@@ -328,6 +340,13 @@ a {
 }
 
 .login-card-glow {
+  pointer-events: none;
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(48px);
+}
+
+.register-card-glow {
   pointer-events: none;
   position: absolute;
   border-radius: 9999px;
@@ -350,6 +369,22 @@ a {
   background: rgba(129, 140, 248, 0.2);
 }
 
+.register-card-glow-top {
+  top: -40px;
+  right: -40px;
+  width: 128px;
+  height: 128px;
+  background: rgba(129, 140, 248, 0.2);
+}
+
+.register-card-glow-bottom {
+  bottom: -40px;
+  left: -40px;
+  width: 160px;
+  height: 160px;
+  background: rgba(168, 85, 247, 0.18);
+}
+
 .login-icon-badge {
   display: flex;
   width: 56px;
@@ -361,6 +396,19 @@ a {
   color: #ffffff;
   background: linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%);
   box-shadow: 0 12px 24px rgba(59, 130, 246, 0.2);
+}
+
+.register-icon-badge {
+  display: flex;
+  width: 56px;
+  height: 56px;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 32px;
+  border-radius: 1rem;
+  color: #ffffff;
+  background: linear-gradient(135deg, #6366f1 0%, #9333ea 100%);
+  box-shadow: 0 12px 24px rgba(99, 102, 241, 0.24);
 }
 
 .login-title {
@@ -433,9 +481,35 @@ a {
     filter 0.2s ease;
 }
 
+.register-submit-button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 14px 16px;
+  border: none;
+  border-radius: 0.75rem;
+  color: #ffffff;
+  background: linear-gradient(90deg, #6366f1 0%, #9333ea 100%);
+  box-shadow: 0 10px 24px rgba(147, 51, 234, 0.22);
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
+}
+
 .login-submit-button:hover {
   transform: translateY(-1px);
   box-shadow: 0 14px 28px rgba(79, 70, 229, 0.28);
+  filter: brightness(1.03);
+}
+
+.register-submit-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(147, 51, 234, 0.28);
   filter: brightness(1.03);
 }
 
@@ -444,7 +518,16 @@ a {
   transition: transform 0.2s ease;
 }
 
+.register-submit-arrow {
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+
 .login-submit-button:hover .login-submit-arrow {
+  transform: translateX(4px);
+}
+
+.register-submit-button:hover .register-submit-arrow {
   transform: translateX(4px);
 }
 
