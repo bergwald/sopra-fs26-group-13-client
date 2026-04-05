@@ -55,8 +55,8 @@ reason).
 |                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | **[@githubUser3]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
 |                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
-| **[@githubUser4]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **@plaiimade** | 04.04.26   | [Commit ade92b9](https://github.com/bergwald/sopra-fs26-group-13-client/commit/ade92b9d2db6443346f124f83765a17064cbc625) | Overworked logic of login page | Now we can use the exact same login API, as already implemented in M1 |
+|                    | 05.04.26   | [Commit dd92704](https://github.com/bergwald/sopra-fs26-group-13-client/commit/dd92704926fc33c93c0a91ecf8f5e26973c847fb) | Added Register frontend page, slightly tweaked frontend API logic (RegisterRequest) and removed global siteheader | New page added, also the page works as a great basis that will work with a slightly tweaked API (with field "name" removed) |
 
 ---
 
