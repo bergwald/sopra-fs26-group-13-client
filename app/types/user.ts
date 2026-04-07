@@ -1,11 +1,12 @@
 export interface User {
-  id: number;
-  name: string;
   username: string;
+  score: number;
+  creation_date: string;
   bio: string;
-  token?: string;
-  status: "ONLINE" | "OFFLINE" | string;
-  creationDate?: string;
+  game_count: number;
+  win_rate: number;
+  average_distance: number;
+  mascot_id: number;
 }
 
 export interface RegisterRequest {
