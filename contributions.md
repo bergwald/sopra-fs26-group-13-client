@@ -75,12 +75,12 @@ reason).
 
 ---
 
-## Contributions Week 4 - [Begin Date] to [End Date]
+## Contributions Week 4 - 13.04.2026 to 19.04.2026
 
 | **Student**        | **Date** | **Link to Commit** | **Description**                 | **Relevance**                       |
 | ------------------ | -------- | ------------------ | ------------------------------- | ----------------------------------- |
-| **[@githubUser1]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **@plaiimade** | 06.04.2026   | [Commit 30d9b0c](https://github.com/bergwald/sopra-fs26-group-13-client/commit/30d9b0ca93ef519d653e661dbe2cf877f26dbe59) | Added HTML and CSS for profile page (users/{id}), also logic for ranks and mascots. Laid the foundation for the profile page to work with a slighty tweaked API. | Added the next frontend page (profile page) and basis for it to work with tweaked API. |
+|                    | 07.04.2026   | [Commit 432f4b6](https://github.com/bergwald/sopra-fs26-group-13-client/commit/432f4b6450772c4af1c1855fd419f8cad9419858) | Added HTML and CSS for profile settings page, also tried to do the logic of how the site could work, but there a some things that might change in the future. | Added next page (profile settings) and first steps for the API logic. |
 | **[@githubUser2]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
 |                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | **[@githubUser3]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
