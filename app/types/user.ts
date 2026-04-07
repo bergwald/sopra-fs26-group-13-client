@@ -23,3 +23,9 @@ export interface LoginRequest {
 export interface ChangePasswordRequest {
   newPassword: string;
 }
+
+export interface UserSelfUpdateRequest {
+  bio?: string;
+  newPassword?: string;
+  mascot_id?: number;
+}

@@ -6,6 +6,7 @@
 import type { User } from "@/types/user";
 import {
   clearStoredAuth,
+  getStoredCurrentMascotId,
   getStoredCurrentUserId,
   getStoredToken,
 } from "@/utils/auth";
@@ -107,6 +108,7 @@ const UserProfilePage: React.FC = () => {
   // const apiService = useApi();
   const [user, setUser] = React.useState<ProfileUser | null>(null);
   const [currentUserId, setCurrentUserIdState] = React.useState<number | null>(null);
+  const [currentMascotId, setCurrentMascotIdState] = React.useState<number | null>(null);
   const [isLoggingOut, setIsLoggingOut] = React.useState<boolean>(false);
   const userId = Array.isArray(params.id) ? params.id[0] : params.id;
 
@@ -126,6 +128,7 @@ const UserProfilePage: React.FC = () => {
   React.useEffect(() => {
     const storedCurrentUserId = getStoredCurrentUserId();
     setCurrentUserIdState(storedCurrentUserId);
+    setCurrentMascotIdState(getStoredCurrentMascotId());
 
     if (!userId) {
       router.replace("/");
@@ -169,7 +172,9 @@ const UserProfilePage: React.FC = () => {
   const gameCount = profileUser.game_count;
   const winRate = profileUser.win_rate;
   const averageDistance = profileUser.average_distance;
-  const navProfileImage = currentUserId ? mascotImage : null;
+  const navProfileImage = currentUserId && currentMascotId
+    ? MASCOT_IMAGES[currentMascotId] ?? MASCOT_IMAGES[1]
+    : null;
 
   const handleLogout = async (): Promise<void> => {
     if (!isOwnProfile) {
