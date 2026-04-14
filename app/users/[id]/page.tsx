@@ -1,99 +1,151 @@
-// User profile page
-
-// your code here for S2 to display a single user profile after having clicked on it
-// each user has their own slug /[id] (/1, /2, /3, ...) and is displayed using this file
-// try to leverage the component library from antd by utilizing "Card" to display the individual user
-// import { Card } from "antd"; // similar to /app/users/page.tsx
-
 "use client";
-// For components that need React hooks and browser APIs,
-// SSR (server side rendering) has to be disabled.
-// Read more here: https://nextjs.org/docs/pages/building-your-application/rendering/server-side-rendering
 
-import React from "react";
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { useApi } from "@/hooks/useApi";
-import { ApplicationError } from "@/types/error";
-import { User, UserSelfUpdateRequest } from "@/types/user";
+// UNCOMMENT ALL LINES TO ACTIVATE GET PROFILE API LOGIC
+// import { useApi } from "@/hooks/useApi";
+// import type { ApplicationError } from "@/types/error";
+import type { User } from "@/types/user";
 import {
   clearStoredAuth,
+  getStoredCurrentMascotId,
   getStoredCurrentUserId,
   getStoredToken,
 } from "@/utils/auth";
-import { Alert, Button, Card, Descriptions, Input, Space, Typography } from "antd";
+import {
+  Award,
+  BarChart2,
+  Crosshair,
+  Hash,
+  LogOut,
+  Settings,
+  TrendingUp,
+  UserCircle,
+} from "lucide-react";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import React from "react";
 
-const MAX_BIO_LENGTH = 280;
+type ProfileUser = User & {
+  id: number;
+};
 
-const Profile: React.FC = () => {
+type ProfileStat = {
+  label: string;
+  value: string;
+  Icon: React.ComponentType<{ className?: string }>;
+  colorClassName: string;
+  backgroundClassName: string;
+};
+
+type ProfileRank = {
+  label: string;
+  minScore: number;
+  maxScore?: number;
+};
+
+const DEFAULT_PROFILE_USER: ProfileUser = {
+  id: 1,
+  username: "GeoMaster99",
+  score: 1750,
+  creation_date: "2026-01-01T00:00:00.000Z",
+  bio: "Exploring the world one pixel at a time. Specializing in European architecture and rural Asian landscapes.",
+  game_count: 342,
+  win_rate: 0.68,
+  average_distance: 24,
+  mascot_id: 2,
+};
+
+const MASCOT_IMAGES: Record<number, string> = {
+  1: "/mascots/earth-sunglasses.svg",
+  2: "/mascots/robot-flower.svg",
+  3: "/mascots/saturn-space.svg",
+  4: "/mascots/smiling-sun.svg",
+};
+
+const PROFILE_RANKS: ProfileRank[] = [
+  { label: "Rookie Explorer", minScore: 0, maxScore: 99 },
+  { label: "Street Scout", minScore: 100, maxScore: 249 },
+  { label: "Map Specialist", minScore: 250, maxScore: 499 },
+  { label: "Geo Expert", minScore: 500, maxScore: 999 },
+  { label: "Grandmaster", minScore: 1000 },
+];
+
+const formatJoinedDate = (creationDate?: string): string => {
+  if (!creationDate) {
+    return "Joined Unknown";
+  }
+
+  return `Joined ${new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(creationDate))}`;
+};
+
+const formatNumber = (value: number): string => {
+  return new Intl.NumberFormat("en-US").format(value);
+};
+
+const formatWinRate = (value: number): string => {
+  return `${Math.round(value <= 1 ? value * 100 : value)}%`;
+};
+
+const formatAverageDistance = (value: number): string => {
+  return `${Math.round(value)}km`;
+};
+
+const getRankForScore = (score: number): string => {
+  return PROFILE_RANKS.find((rank) => {
+    const hasMinimumScore = score >= rank.minScore;
+    const hasMaximumScore = rank.maxScore === undefined || score <= rank.maxScore;
+
+    return hasMinimumScore && hasMaximumScore;
+  })?.label ?? PROFILE_RANKS[0].label;
+};
+
+const UserProfilePage: React.FC = () => {
   const router = useRouter();
-  // Read the user ID from the URL route parameter
   const params = useParams<{ id: string }>();
-  const apiService = useApi();
-  const [user, setUser] = useState<User | null>(null);
-  const [currentUserId, setCurrentUserIdState] = useState<number | null>(null);
-  const [bioDraft, setBioDraft] = useState<string>("");
-  const [originalBio, setOriginalBio] = useState<string>("");
-  const [isEditingBio, setIsEditingBio] = useState<boolean>(false);
-  const [isSavingBio, setIsSavingBio] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string>("");
-  const [successMessage, setSuccessMessage] = useState<string>("");
-
+  // const apiService = useApi();
+  const [user, setUser] = React.useState<ProfileUser | null>(null);
+  const [currentUserId, setCurrentUserIdState] = React.useState<number | null>(null);
+  const [currentMascotId, setCurrentMascotIdState] = React.useState<number | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = React.useState<boolean>(false);
   const userId = Array.isArray(params.id) ? params.id[0] : params.id;
-  const formattedCreationDate = user?.creationDate
-    ? new Intl.DateTimeFormat("en-US", {
-      dateStyle: "medium",
-      timeStyle: "short",
-      timeZone: "UTC",
-    }).format(new Date(user.creationDate))
-    : "Unknown";
 
-  const fetchUser = React.useCallback(async (token: string, targetUserId: string) => {
-    const fetchedUser = await apiService.get<User>(`/users/${targetUserId}`, {
-      Authorization: `Bearer ${token}`,
+  const fetchUser = React.useCallback(async (targetUserId: string) => {
+    // const fetchedUser = await apiService.get<ProfileUser>(`/users/${targetUserId}`);
+    // setUser({
+    //   ...DEFAULT_PROFILE_USER,
+    //   ...fetchedUser,
+    // });
+
+    setUser({ // HERE WE NEED TO LATER REMOVE DEFAULT USER, AND JUST USE API RESULT
+      ...DEFAULT_PROFILE_USER, // REPLACE WITH "...fetchedUser,"
+      id: Number(targetUserId) || DEFAULT_PROFILE_USER.id, // REMOVE " || DEFAULT_PROFILE_USER.id"
     });
+  }, []); // CHANGE [] to [apiService]
 
-    setUser(fetchedUser);
-    setBioDraft(fetchedUser.bio ?? "");
-    setOriginalBio(fetchedUser.bio ?? "");
-  }, [apiService]);
-
-  useEffect(() => {
-    const token = getStoredToken();
+  React.useEffect(() => {
     const storedCurrentUserId = getStoredCurrentUserId();
+    setCurrentUserIdState(storedCurrentUserId);
+    setCurrentMascotIdState(getStoredCurrentMascotId());
 
-    // Token and current-user ID must always exist together in authenticated routes.
-    if (!token || !storedCurrentUserId) {
-      clearStoredAuth();
+    if (!userId) {
       router.replace("/");
       return;
     }
 
-    if (!userId) {
-      router.replace("/users");
-      return;
-    }
-
-    setCurrentUserIdState(storedCurrentUserId);
-
-    // Function to fetch user data from the backend
     const loadUser = async () => {
       try {
-        await fetchUser(token, userId);
+        await fetchUser(userId);
       } catch (error) {
-        const appError = error as ApplicationError;
+        // const appError = error as ApplicationError;
 
-        if (appError.status === 401) {
-          clearStoredAuth();
-          router.replace("/");
-          return;
-        }
-
-        if (appError.status === 404) {
-          alert("User not found.");
-          router.replace("/users");
-          return;
-        }
+        // if (appError.status === 404) {
+        //   alert("User not found.");
+        //   router.replace("/");
+        //   return;
+        // }
 
         if (error instanceof Error) {
           alert(
@@ -108,219 +160,195 @@ const Profile: React.FC = () => {
     loadUser();
   }, [fetchUser, router, userId]);
 
-  let profileTitle = "Loading user...";
-  if (user) {
-    // Show a custom title when the logged-in user views their own profile.
-    profileTitle = user.id === currentUserId
-      ? "Your Profile"
-      : `Profile of user ${user.username}`;
-  }
-  const isOwnProfile = user?.id === currentUserId;
-  const isBioChanged = bioDraft !== originalBio;
-  const isBioTooLong = bioDraft.length > MAX_BIO_LENGTH;
-  const renderStatus = (status: User["status"]) => {
-    if (status === "ONLINE") {
-      return <span style={{ color: "#52c41a", fontWeight: 600 }}>{status}</span>;
+  const profileUser = user ?? DEFAULT_PROFILE_USER; // REMOVE THIS LATER AND JUST USE API RESULT
+  const profileTitle = profileUser.id === currentUserId
+    ? "Your Profile"
+    : `Profile of user ${profileUser.username}`;
+  const isOwnProfile = profileUser.id === currentUserId;
+  const joinedDate = formatJoinedDate(profileUser.creation_date);
+  const mascotId = profileUser.mascot_id;
+  const mascotImage = MASCOT_IMAGES[mascotId] ?? MASCOT_IMAGES[1];
+  const profileRank = getRankForScore(profileUser.score);
+  const gameCount = profileUser.game_count;
+  const winRate = profileUser.win_rate;
+  const averageDistance = profileUser.average_distance;
+  const navProfileImage = currentUserId && currentMascotId
+    ? MASCOT_IMAGES[currentMascotId] ?? MASCOT_IMAGES[1]
+    : null;
+
+  const handleLogout = async (): Promise<void> => {
+    if (!isOwnProfile) {
+      return;
     }
 
-    if (status === "OFFLINE") {
-      return <span style={{ color: "#ff4d4f", fontWeight: 600 }}>{status}</span>;
-    }
-
-    return status;
-  };
-
-  const handleStartEditingBio = () => {
-    setBioDraft(originalBio);
-    setErrorMessage("");
-    setSuccessMessage("");
-    setIsEditingBio(true);
-  };
-
-  const handleCancelEditingBio = () => {
-    setBioDraft(originalBio);
-    setErrorMessage("");
-    setSuccessMessage("");
-    setIsEditingBio(false);
-  };
-
-  const handleSaveBio = async () => {
+    setIsLoggingOut(true);
     const token = getStoredToken();
 
-    if (!token || !currentUserId || !userId) {
-      clearStoredAuth();
-      router.replace("/");
-      return;
-    }
-
-    if (!isBioChanged) {
-      return;
-    }
-
-    if (isBioTooLong) {
-      setErrorMessage(`Bio must be at most ${MAX_BIO_LENGTH} characters.`);
-      return;
-    }
-
-    setErrorMessage("");
-    setSuccessMessage("");
-    setIsSavingBio(true);
-
     try {
-      const payload: UserSelfUpdateRequest = {
-        bio: bioDraft,
-      };
-
-      await apiService.put<void>(`/users/${currentUserId}`, payload, {
-        Authorization: `Bearer ${token}`,
-      });
-
-      await fetchUser(token, userId);
-      setIsEditingBio(false);
-      setSuccessMessage("Bio updated successfully.");
+      if (token) {
+        // await apiService.post<void>("/logout", undefined, {
+        //   Authorization: `Bearer ${token}`,
+        // });
+      }
     } catch (error) {
-      const appError = error as ApplicationError;
-
-      if (appError.status === 401) {
-        clearStoredAuth();
-        router.replace("/");
-        return;
-      }
-
-      if (appError.status === 404) {
-        alert("User not found.");
-        router.replace("/users");
-        return;
-      }
-
-      if (appError.status === 400) {
-        setErrorMessage(
-          `Bio must be at most ${MAX_BIO_LENGTH} characters after trimming.`,
-        );
-        return;
-      }
-
       if (error instanceof Error) {
-        setErrorMessage(error.message);
+        alert(
+          `Something went wrong while logging out:\n${error.message}`,
+        );
       } else {
-        setErrorMessage("Bio update failed. Please try again.");
+        alert("Something went wrong while logging out.");
       }
     } finally {
-      setIsSavingBio(false);
+      // We still clear local auth state even if logout request fails.
+      // WE NEED TO ALSO ADD MASCOT_ID CLEARING IF WE WANT TO STORE MASCOT_ID IN LOCAL STORAGE
+      clearStoredAuth();
+      setCurrentUserIdState(null);
+      setIsLoggingOut(false);
     }
   };
 
+  const stats: ProfileStat[] = [
+    {
+      label: "Score",
+      value: formatNumber(profileUser.score),
+      Icon: TrendingUp,
+      colorClassName: "profile-stat-icon-blue",
+      backgroundClassName: "profile-stat-icon-bg-blue",
+    },
+    {
+      label: "Win Rate",
+      value: formatWinRate(winRate),
+      Icon: BarChart2,
+      colorClassName: "profile-stat-icon-emerald",
+      backgroundClassName: "profile-stat-icon-bg-emerald",
+    },
+    {
+      label: "Matches Played",
+      value: formatNumber(gameCount),
+      Icon: Hash,
+      colorClassName: "profile-stat-icon-indigo",
+      backgroundClassName: "profile-stat-icon-bg-indigo",
+    },
+    {
+      label: "Avg. Distance",
+      value: formatAverageDistance(averageDistance),
+      Icon: Crosshair,
+      colorClassName: "profile-stat-icon-sky",
+      backgroundClassName: "profile-stat-icon-bg-sky",
+    },
+  ];
+
   return (
-    <div className="card-container">
-      <Card
-        title={profileTitle}
-        loading={!user}
-        className="dashboard-container profile-card"
-      >
-        {user && (
-          <Space orientation="vertical" size="large" className="profile-content">
-            <Descriptions className="profile-descriptions" column={1} bordered>
-              <Descriptions.Item label="Name">{user.name}</Descriptions.Item>
-              <Descriptions.Item label="Username">
-                {user.username}
-              </Descriptions.Item>
-              <Descriptions.Item label="Status">
-                {renderStatus(user.status)}
-              </Descriptions.Item>
-              <Descriptions.Item label="Bio">
-                {isOwnProfile && isEditingBio
-                  ? (
-                    <Space
-                      direction="vertical"
-                      size="small"
-                      className="profile-bio-editor"
-                    >
-                      <Input.TextArea
-                        value={bioDraft}
-                        onChange={(event) => {
-                          setBioDraft(event.target.value);
-                          setErrorMessage("");
-                          setSuccessMessage("");
-                        }}
-                        maxLength={MAX_BIO_LENGTH}
-                        showCount
-                        autoSize={{ minRows: 4, maxRows: 8 }}
-                        placeholder="Tell other players a bit about yourself."
-                      />
-                      <Typography.Text type="secondary">
-                        Whitespace-only bios are allowed and will be stored as
-                        empty.
-                      </Typography.Text>
-                    </Space>
-                  )
-                  : (user.bio || "No bio provided")}
-              </Descriptions.Item>
-              <Descriptions.Item label="Registration Date">
-                {formattedCreationDate}
-              </Descriptions.Item>
-            </Descriptions>
+    <div className="profile-page-root">
+      <div className="login-page-background" />
 
-            {errorMessage && (
-              <Alert
-                type="error"
-                showIcon
-                message={errorMessage}
-                className="profile-feedback-alert"
-              />
-            )}
-            {successMessage && (
-              <Alert
-                type="success"
-                showIcon
-                message={successMessage}
-                className="profile-feedback-alert"
-              />
-            )}
+      <nav className="login-page-nav profile-page-nav">
+        <div className="login-page-nav-left">
+          <Link href="/" className="login-page-brand">
+            <div className="login-page-brand-icon" aria-hidden="true">
+              G
+            </div>
+            <span className="login-page-brand-text">GeoGuess</span>
+          </Link>
+        </div>
 
-            <Space>
-              {/* Button to the user overview page */}
-              <Button type="default" onClick={() => router.push("/users")}>
-                Users Overview
-              </Button>
-              {isOwnProfile && !isEditingBio && (
-                <Button type="default" onClick={handleStartEditingBio}>
-                  Edit Bio
-                </Button>
-              )}
-              {isOwnProfile && isEditingBio && (
-                <>
-                  <Button
-                    type="primary"
-                    onClick={handleSaveBio}
-                    loading={isSavingBio}
-                    disabled={!isBioChanged || isBioTooLong}
+        <div className="login-page-nav-right">
+          <Link
+            href={currentUserId ? `/users/${currentUserId}` : "/login"}
+            className="profile-nav-avatar-link"
+            aria-label={currentUserId ? "Open your profile" : "Open login page"}
+          >
+            {navProfileImage
+              ? (
+                <img
+                  src={navProfileImage}
+                  alt="Your mascot"
+                  className="profile-nav-avatar-image"
+                />
+              )
+              : <UserCircle className="profile-nav-avatar-icon" />}
+          </Link>
+        </div>
+        <div className="login-page-nav-divider" />
+      </nav>
+
+      <main className="profile-page-shell" aria-label={profileTitle}>
+        <section className="profile-header-card">
+          <div className="profile-header-glow" />
+
+          <div className="profile-avatar-wrap">
+            <div className="profile-avatar-frame">
+              <img
+                src={mascotImage}
+                alt={`${profileUser.username} mascot`}
+                className="profile-avatar-image"
+              />
+            </div>
+          </div>
+
+          <div className="profile-header-content">
+            <div className="profile-title-row">
+              <h1 className="profile-username">{profileUser.username}</h1>
+              {isOwnProfile && (
+                <div className="profile-actions">
+                  <Link
+                    href={`/users/edit/${profileUser.id}`}
+                    className="profile-edit-link"
                   >
-                    Save Bio
-                  </Button>
-                  <Button
-                    type="default"
-                    onClick={handleCancelEditingBio}
-                    disabled={isSavingBio}
+                    <Settings className="profile-edit-icon" />
+                    Edit Profile
+                  </Link>
+                  <button
+                    type="button"
+                    className="profile-edit-link profile-logout-button"
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
                   >
-                    Cancel
-                  </Button>
-                </>
+                    <LogOut className="profile-edit-icon" />
+                    {isLoggingOut ? "Logging out..." : "Logout"}
+                  </button>
+                </div>
               )}
-              {/* Button to the page to change the password */}
-              {isOwnProfile && currentUserId && (
-                <Button
-                  type="default"
-                  onClick={() => router.push(`/users/${currentUserId}/password`)}
-                >
-                  Change Password
-                </Button>
-              )}
-            </Space>
-          </Space>
-        )}
-      </Card>
+            </div>
+
+            <p className="profile-bio">
+              &quot;{profileUser.bio || "No bio provided"}&quot;
+            </p>
+
+            <div className="profile-badges">
+              <div className="profile-tier-badge">
+                <Award className="profile-badge-icon" />
+                {profileRank} Tier
+              </div>
+              <div className="profile-date-badge">
+                {joinedDate}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="profile-stats-grid" aria-label="Profile statistics">
+          {stats.map((stat) => (
+            <div key={stat.label} className="profile-stat-card">
+              <div
+                className={`profile-stat-icon-wrap ${stat.backgroundClassName} ${stat.colorClassName}`}
+              >
+                <stat.Icon className="profile-stat-icon" />
+              </div>
+              <p className="profile-stat-label">{stat.label}</p>
+              <h4 className="profile-stat-value">{stat.value}</h4>
+            </div>
+          ))}
+        </section>
+      </main>
+
+      <footer className="login-page-footer profile-page-footer">
+        <div className="login-page-footer-content">
+          <div className="login-page-footer-text">&copy; 2026 SoPra Group 13</div>
+        </div>
+      </footer>
     </div>
   );
 };
 
-export default Profile;
+export default UserProfilePage;
