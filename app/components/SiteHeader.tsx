@@ -81,6 +81,9 @@ const SiteHeader: React.FC = () => {
 
       {hasToken && (
         <div className="site-header-actions">
+          <Link href="/users" className="site-profile-link">
+            Users Overview
+          </Link>
           {/* Direct link to the logged-in user's own profile page. */}
           {currentUserId && (
             <Link href={`/users/${currentUserId}`} className="site-profile-link">
