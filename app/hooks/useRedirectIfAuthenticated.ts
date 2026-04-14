@@ -2,27 +2,33 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { getStoredToken } from "@/utils/auth";
+import {
+  getStoredCurrentMascotId,
+  getStoredCurrentUserId,
+  getStoredToken,
+} from "@/utils/auth";
 
 /**
- * Redirects authenticated users to a target route and returns whether the auth check finished.
+ * Redirects authenticated users to their own profile route and returns whether the auth check finished.
  *
- * @param redirectPath The route to navigate to if a token is present.
- * @returns `true` once no token was found and the current page may render safely.
+ * @returns `true` once no complete auth state was found and the current page may render safely.
  */
-export default function useRedirectIfAuthenticated(
-  redirectPath: string = "/",
-): boolean {
+export default function useRedirectIfAuthenticated(): boolean {
   const router = useRouter();
   const [isAuthChecked, setIsAuthChecked] = React.useState<boolean>(false);
 
   React.useEffect(() => {
-    if (getStoredToken()) {
-      router.replace(redirectPath);
+    const token = getStoredToken();
+    const currentUserId = getStoredCurrentUserId();
+    const currentMascotId = getStoredCurrentMascotId();
+
+    if (token && currentUserId && currentMascotId) {
+      router.replace(`/users/${currentUserId}`);
       return;
     }
+
     setIsAuthChecked(true);
-  }, [redirectPath, router]);
+  }, [router]);
 
   return isAuthChecked;
 }

@@ -20,7 +20,7 @@ const RegisterPage: React.FC = () => {
   const [form] = Form.useForm<RegisterRequest>();
   const [errorMessage, setErrorMessage] = React.useState<string>("");
   const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
-  const isAuthChecked = useRedirectIfAuthenticated("/");
+  const isAuthChecked = useRedirectIfAuthenticated();
   // const { set: setToken } = useLocalStorage<string>("token", "");
 
   const handleRegister = async (values: RegisterRequest) => {

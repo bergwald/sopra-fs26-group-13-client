@@ -19,7 +19,7 @@ const LoginPage: React.FC = () => {
   // const apiService = useApi();
   const [form] = Form.useForm<LoginRequest>();
   const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
-  const isAuthChecked = useRedirectIfAuthenticated("/");
+  const isAuthChecked = useRedirectIfAuthenticated();
   // const { set: setToken } = useLocalStorage<string>("token", "");
 
   const handleLogin = async (loginValues: LoginRequest) => {
