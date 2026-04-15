@@ -581,6 +581,7 @@ a {
   background:
     radial-gradient(circle at center, transparent 36%, rgba(2, 6, 23, 0.48) 100%),
     linear-gradient(180deg, rgba(2, 6, 23, 0.2) 0%, rgba(2, 6, 23, 0.58) 100%);
+  pointer-events: none;
 }
 
 .game-hero-grid {
@@ -594,6 +595,70 @@ a {
   pointer-events: none;
 }
 
+.game-street-view-shell {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top, rgba(14, 165, 233, 0.16), transparent 48%),
+    linear-gradient(180deg, #020617 0%, #0f172a 100%);
+}
+
+.game-street-view-canvas {
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.game-street-view-canvas-ready {
+  opacity: 1;
+}
+
+.game-street-view-state {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background:
+    linear-gradient(180deg, rgba(2, 6, 23, 0.86) 0%, rgba(15, 23, 42, 0.86) 100%);
+  color: #e2e8f0;
+  text-align: center;
+}
+
+.game-street-view-state-error {
+  background:
+    radial-gradient(circle at top, rgba(239, 68, 68, 0.2), transparent 38%),
+    linear-gradient(180deg, rgba(2, 6, 23, 0.92) 0%, rgba(15, 23, 42, 0.92) 100%);
+}
+
+.game-street-view-state-eyebrow {
+  color: #38bdf8;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.game-street-view-state-title {
+  max-width: 32rem;
+  color: #f8fafc;
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  font-weight: 700;
+}
+
+.game-street-view-state-message {
+  max-width: 36rem;
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
 .game-page-overlay {
   position: absolute;
   inset: 0;
@@ -602,6 +667,7 @@ a {
   justify-content: flex-start;
   padding: 0;
   overflow: hidden;
+  pointer-events: none;
 }
 
 .game-top-bar {
@@ -615,6 +681,7 @@ a {
   flex-wrap: wrap;
   max-width: calc(100% - 25rem);
   margin-top: 0;
+  pointer-events: auto;
 }
 
 .game-metric-card {
@@ -661,6 +728,7 @@ a {
     width 0.25s ease,
     height 0.25s ease,
     transform 0.25s ease;
+  pointer-events: auto;
 }
 
 .game-map-panel-expanded {
