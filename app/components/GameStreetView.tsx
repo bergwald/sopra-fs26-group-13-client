@@ -50,6 +50,7 @@ interface StreetViewPanoramaConstructor {
     container: HTMLElement,
     options?: {
       addressControl?: boolean;
+      clickToGo?: boolean;
       disableDefaultUI?: boolean;
       fullscreenControl?: boolean;
       linksControl?: boolean;
@@ -259,8 +260,9 @@ const GameStreetView: React.FC<GameStreetViewProps> = ({ onPanoramaLoaded }) => 
         const panorama = new StreetViewPanorama(container, {
           disableDefaultUI: true,
           addressControl: false,
+          clickToGo: false,
           fullscreenControl: false,
-          linksControl: true,
+          linksControl: false,
           motionTracking: false,
           motionTrackingControl: false,
           showRoadLabels: false,
