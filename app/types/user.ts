@@ -23,10 +23,40 @@ export interface LoginRequest {
 export interface UserSelfUpdateRequest {
   bio?: string;
   newPassword?: string;
+  mascot_id?: number;
 }
 
-export interface UserSelfUpdateRequest {
-  bio?: string;
-  newPassword?: string;
-  mascot_id?: number;
+export interface SessionUser {
+  user_id: number;
+  session_id: string;
+}
+
+export interface GameSession {
+  session_id: string;
+  expiry_date: string;
+  round_number: number;
+  total_rounds: number;
+  mode: "singleplayer" | "multiplayer";
+}
+
+export interface GameData {
+  wikidata_url: string;
+  round_number: number;
+  latitude: number;
+  longitude: number;
+  location_name?: string;
+  expiry_date: string;
+}
+
+export interface UserGuess {
+  user_id: number;
+  session_id: string;
+  round_number: number;
+  latitude: number;
+  longitude: number;
+}
+
+export interface GameResult {
+  username: string;
+  score: number;
 }
