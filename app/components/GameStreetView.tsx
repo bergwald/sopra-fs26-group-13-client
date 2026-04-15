@@ -80,6 +80,7 @@ interface StreetViewLibrary {
 const GOOGLE_MAPS_CALLBACK = "__initGameStreetViewGoogleMaps";
 
 let googleMapsApiPromise: Promise<GoogleMapsApi> | null = null;
+let panoramaCandidatePromise: Promise<GooglePanoramaCandidate> | null = null;
 
 function validateGooglePanoramaCandidate(candidate: unknown): GooglePanoramaCandidate {
   if (
@@ -111,27 +112,18 @@ function loadGoogleMapsApi(apiKey: string): Promise<GoogleMapsApi> {
   }
 
   googleMapsApiPromise = new Promise<GoogleMapsApi>((resolve, reject) => {
-    const existingScript = document.querySelector<HTMLScriptElement>(
-      'script[data-google-maps-loader="game-street-view"]',
-    );
-
     googleWindow[GOOGLE_MAPS_CALLBACK] = () => {
       const mapsApi = googleWindow.google?.maps;
 
       delete googleWindow[GOOGLE_MAPS_CALLBACK];
 
       if (!mapsApi?.importLibrary) {
-        googleMapsApiPromise = null;
         reject(new Error("Google Maps loaded without the importLibrary API."));
         return;
       }
 
       resolve(mapsApi);
     };
-
-    if (existingScript) {
-      return;
-    }
 
     const params = new URLSearchParams({
       key: apiKey,
@@ -147,7 +139,6 @@ function loadGoogleMapsApi(apiKey: string): Promise<GoogleMapsApi> {
     script.defer = true;
     script.dataset.googleMapsLoader = "game-street-view";
     script.onerror = () => {
-      googleMapsApiPromise = null;
       delete googleWindow[GOOGLE_MAPS_CALLBACK];
       reject(new Error("Google Maps JavaScript API failed to load."));
     };
@@ -156,6 +147,20 @@ function loadGoogleMapsApi(apiKey: string): Promise<GoogleMapsApi> {
   });
 
   return googleMapsApiPromise;
+}
+
+function fetchPanoramaCandidate(
+  apiService: ReturnType<typeof useApi>,
+): Promise<GooglePanoramaCandidate> {
+  if (panoramaCandidatePromise) {
+    return panoramaCandidatePromise;
+  }
+
+  panoramaCandidatePromise = apiService
+    .get<GooglePanoramaCandidate>("/google/panorama")
+    .then(validateGooglePanoramaCandidate);
+
+  return panoramaCandidatePromise;
 }
 
 function getStreetViewErrorMessage(status: string, unavailableStatus: string): string {
@@ -171,11 +176,16 @@ const GameStreetView: React.FC<GameStreetViewProps> = ({ onPanoramaLoaded }) => 
   const panoramaContainerRef = React.useRef<HTMLDivElement | null>(null);
   const panoramaRef = React.useRef<StreetViewPanoramaInstance | null>(null);
   const panoramaListenerRef = React.useRef<GoogleMapsListener | null>(null);
+  const onPanoramaLoadedRef = React.useRef(onPanoramaLoaded);
   const [state, setState] = React.useState<StreetViewState>({
     kind: "loading",
     title: "Loading Street View",
     message: "Requesting a panorama candidate from the backend.",
   });
+
+  React.useEffect(() => {
+    onPanoramaLoadedRef.current = onPanoramaLoaded;
+  }, [onPanoramaLoaded]);
 
   React.useEffect(() => {
     let isCancelled = false;
@@ -206,15 +216,13 @@ const GameStreetView: React.FC<GameStreetViewProps> = ({ onPanoramaLoaded }) => 
           message: "Requesting a panorama candidate from the backend.",
         });
 
-        const candidate = validateGooglePanoramaCandidate(
-          await apiService.get<GooglePanoramaCandidate>("/google/panorama"),
-        );
+        const candidate = await fetchPanoramaCandidate(apiService);
 
         if (isCancelled) {
           return;
         }
 
-        onPanoramaLoaded?.(candidate);
+        onPanoramaLoadedRef.current?.(candidate);
 
         setState({
           kind: "loading",
@@ -331,7 +339,7 @@ const GameStreetView: React.FC<GameStreetViewProps> = ({ onPanoramaLoaded }) => 
         panoramaContainerRef.current.innerHTML = "";
       }
     };
-  }, [apiService, onPanoramaLoaded]);
+  }, [apiService]);
 
   return (
     <div className="game-street-view-shell">
