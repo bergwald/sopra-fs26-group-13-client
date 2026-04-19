@@ -90,6 +90,16 @@ const GamePage: React.FC = () => {
   const navProfileImage = currentMascotId
     ? MASCOT_IMAGES[currentMascotId] ?? MASCOT_IMAGES[1]
     : null;
+  const handlePanoramaLoaded = React.useCallback((candidate: {
+    latitude: number;
+    longitude: number;
+  }) => {
+    setGameData((previousGameData) => ({
+      ...previousGameData,
+      latitude: candidate.latitude,
+      longitude: candidate.longitude,
+    }));
+  }, []);
 
   const loadGamePageData = React.useCallback(() => {
     const storedCurrentUserId = getStoredCurrentUserId();
@@ -314,14 +324,7 @@ const GamePage: React.FC = () => {
 
       <main className="game-page-main">
         <section className="game-hero-panel">
-          <GameStreetView
-            onPanoramaLoaded={(candidate) =>
-              setGameData((previousGameData) => ({
-                ...previousGameData,
-                latitude: candidate.latitude,
-                longitude: candidate.longitude,
-              }))}
-          />
+          <GameStreetView onPanoramaLoaded={handlePanoramaLoaded} />
           <div className="game-hero-vignette" />
           <div className="game-hero-grid" />
 

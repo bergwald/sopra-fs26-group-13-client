@@ -52,12 +52,16 @@ interface StreetViewPanoramaConstructor {
       addressControl?: boolean;
       clickToGo?: boolean;
       disableDefaultUI?: boolean;
+      enableCloseButton?: boolean;
       fullscreenControl?: boolean;
       linksControl?: boolean;
       motionTracking?: boolean;
       motionTrackingControl?: boolean;
+      panControl?: boolean;
+      scrollwheel?: boolean;
       showRoadLabels?: boolean;
       visible?: boolean;
+      zoomControl?: boolean;
     },
   ): StreetViewPanoramaInstance;
 }
@@ -79,6 +83,7 @@ interface StreetViewLibrary {
 }
 
 const GOOGLE_MAPS_CALLBACK = "__initGameStreetViewGoogleMaps";
+const GOOGLE_MAPS_SCRIPT_SELECTOR = 'script[data-google-maps-loader="game-street-view"]';
 
 let googleMapsApiPromise: Promise<GoogleMapsApi> | null = null;
 let panoramaCandidatePromise: Promise<GooglePanoramaCandidate> | null = null;
@@ -103,6 +108,15 @@ function loadGoogleMapsApi(apiKey: string): Promise<GoogleMapsApi> {
   }
 
   const googleWindow = window as GoogleMapsWindow;
+  const resolveMapsApi = (): GoogleMapsApi => {
+    const mapsApi = googleWindow.google?.maps;
+
+    if (!mapsApi?.importLibrary) {
+      throw new Error("Google Maps loaded without the importLibrary API.");
+    }
+
+    return mapsApi;
+  };
 
   if (googleWindow.google?.maps?.importLibrary) {
     return Promise.resolve(googleWindow.google.maps);
@@ -113,18 +127,47 @@ function loadGoogleMapsApi(apiKey: string): Promise<GoogleMapsApi> {
   }
 
   googleMapsApiPromise = new Promise<GoogleMapsApi>((resolve, reject) => {
-    googleWindow[GOOGLE_MAPS_CALLBACK] = () => {
-      const mapsApi = googleWindow.google?.maps;
+    const existingScript = document.querySelector<HTMLScriptElement>(
+      GOOGLE_MAPS_SCRIPT_SELECTOR,
+    );
 
+    const handleReady = () => {
+      try {
+        resolve(resolveMapsApi());
+      } catch (error) {
+        reject(
+          error instanceof Error
+            ? error
+            : new Error("Google Maps failed to initialize."),
+        );
+      }
+    };
+
+    const handleFailure = () => {
       delete googleWindow[GOOGLE_MAPS_CALLBACK];
+      reject(new Error("Google Maps JavaScript API failed to load."));
+    };
 
-      if (!mapsApi?.importLibrary) {
-        reject(new Error("Google Maps loaded without the importLibrary API."));
+    googleWindow[GOOGLE_MAPS_CALLBACK] = () => {
+      delete googleWindow[GOOGLE_MAPS_CALLBACK];
+      handleReady();
+    };
+
+    if (existingScript) {
+      if (existingScript.dataset.status === "loaded") {
+        handleReady();
         return;
       }
 
-      resolve(mapsApi);
-    };
+      if (existingScript.dataset.status === "error") {
+        handleFailure();
+        return;
+      }
+
+      existingScript.addEventListener("load", handleReady, { once: true });
+      existingScript.addEventListener("error", handleFailure, { once: true });
+      return;
+    }
 
     const params = new URLSearchParams({
       key: apiKey,
@@ -139,9 +182,13 @@ function loadGoogleMapsApi(apiKey: string): Promise<GoogleMapsApi> {
     script.async = true;
     script.defer = true;
     script.dataset.googleMapsLoader = "game-street-view";
+    script.dataset.status = "loading";
+    script.addEventListener("load", () => {
+      script.dataset.status = "loaded";
+    }, { once: true });
     script.onerror = () => {
-      delete googleWindow[GOOGLE_MAPS_CALLBACK];
-      reject(new Error("Google Maps JavaScript API failed to load."));
+      script.dataset.status = "error";
+      handleFailure();
     };
 
     document.head.appendChild(script);
@@ -172,7 +219,7 @@ function getStreetViewErrorMessage(status: string, unavailableStatus: string): s
   return "Google Street View could not render the selected panorama.";
 }
 
-const GameStreetView: React.FC<GameStreetViewProps> = ({ onPanoramaLoaded }) => {
+const GameStreetViewComponent: React.FC<GameStreetViewProps> = ({ onPanoramaLoaded }) => {
   const apiService = useApi();
   const panoramaContainerRef = React.useRef<HTMLDivElement | null>(null);
   const panoramaRef = React.useRef<StreetViewPanoramaInstance | null>(null);
@@ -261,12 +308,17 @@ const GameStreetView: React.FC<GameStreetViewProps> = ({ onPanoramaLoaded }) => 
           disableDefaultUI: true,
           addressControl: false,
           clickToGo: false,
+          enableCloseButton: false,
           fullscreenControl: false,
           linksControl: false,
           motionTracking: false,
           motionTrackingControl: false,
+          panControl: false,
+          // Lock the viewpoint to a single panorama while still allowing rotation.
+          scrollwheel: false,
           showRoadLabels: false,
           visible: true,
+          zoomControl: false,
         });
 
         panoramaRef.current = panorama;
@@ -304,6 +356,13 @@ const GameStreetView: React.FC<GameStreetViewProps> = ({ onPanoramaLoaded }) => 
           });
 
           panorama.setPano(candidate.panoId);
+
+          if (panorama.getStatus() === StreetViewStatus.OK) {
+            globalThis.clearTimeout(timeoutId);
+            panoramaListenerRef.current?.remove();
+            panoramaListenerRef.current = null;
+            resolve();
+          }
         });
 
         if (isCancelled) {
@@ -369,5 +428,7 @@ const GameStreetView: React.FC<GameStreetViewProps> = ({ onPanoramaLoaded }) => 
     </div>
   );
 };
+
+const GameStreetView = React.memo(GameStreetViewComponent);
 
 export default GameStreetView;
