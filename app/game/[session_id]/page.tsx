@@ -4,11 +4,11 @@ import React from "react";
 // UNCOMMENT ALL LINES TO ACTIVATE GAME PAGE API LOGIC
 // import { useApi } from "@/hooks/useApi";
 // import type { ApplicationError } from "@/types/error";
+import GameStreetView from "@/components/GameStreetView";
 import type { GameData, GameSession, UserGuess } from "@/types/user";
 import {
   getStoredCurrentMascotId,
   getStoredCurrentUserId,
-  getStoredToken,
 } from "@/utils/auth";
 import {
   Clock3,
@@ -70,7 +70,7 @@ const GamePage: React.FC = () => {
   const [currentUserId, setCurrentUserId] = React.useState<number | null>(null);
   const [currentMascotId, setCurrentMascotId] = React.useState<number | null>(null);
   const [session, setSession] = React.useState<GameSession>(DEFAULT_SESSION);
-  const [gameData, setGameData] = React.useState<GameData>(DEFAULT_GAME_DATA);
+  const [, setGameData] = React.useState<GameData>(DEFAULT_GAME_DATA);
   const [isAuthorized, setIsAuthorized] = React.useState<boolean>(false);
   const [mapExpanded, setMapExpanded] = React.useState<boolean>(false);
   const [hasSubmittedGuess, setHasSubmittedGuess] = React.useState<boolean>(false);
@@ -90,9 +90,18 @@ const GamePage: React.FC = () => {
   const navProfileImage = currentMascotId
     ? MASCOT_IMAGES[currentMascotId] ?? MASCOT_IMAGES[1]
     : null;
+  const handlePanoramaLoaded = React.useCallback((candidate: {
+    latitude: number;
+    longitude: number;
+  }) => {
+    setGameData((previousGameData) => ({
+      ...previousGameData,
+      latitude: candidate.latitude,
+      longitude: candidate.longitude,
+    }));
+  }, []);
 
-  const loadGamePageData = React.useCallback(async () => {
-    const token = getStoredToken();
+  const loadGamePageData = React.useCallback(() => {
     const storedCurrentUserId = getStoredCurrentUserId();
     const storedCurrentMascotId = getStoredCurrentMascotId();
 
@@ -217,7 +226,7 @@ const GamePage: React.FC = () => {
     });
   };
 
-  const handleSubmitGuess = async () => {
+  const handleSubmitGuess = () => {
     if (!selectedGuess || !currentUserId) {
       return;
     }
@@ -315,14 +324,7 @@ const GamePage: React.FC = () => {
 
       <main className="game-page-main">
         <section className="game-hero-panel">
-          {/* Replace this mock image with the Wikidata image URL from your backend.
-              Example idea:
-              <img src={gameData.wikidata_url} alt="Round location from Wikidata" /> */}
-          <img
-            src={gameData.wikidata_url}
-            alt="Round location to guess"
-            className="game-hero-image"
-          />
+          <GameStreetView onPanoramaLoaded={handlePanoramaLoaded} />
           <div className="game-hero-vignette" />
           <div className="game-hero-grid" />
 

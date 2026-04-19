@@ -181,7 +181,7 @@ const HomePage: React.FC = () => {
     setCurrentUserId(storedCurrentUserId);
     setCurrentMascotId(storedCurrentMascotId);
 
-    const loadLeaderboard = async () => {
+    const loadLeaderboard = () => {
       try {
         // This follows the same `/users` API shape your old overview page used.
         // Once the backend returns the top 10 directly, you can remove the sort/slice.
@@ -224,7 +224,7 @@ const HomePage: React.FC = () => {
     ? MASCOT_IMAGES[currentMascotId] ?? MASCOT_IMAGES[1]
     : null;
 
-  const handleSingleplayer = async () => {
+  const handleSingleplayer = () => {
     try {
       const demoSessionId = "1";
 
@@ -248,7 +248,7 @@ const HomePage: React.FC = () => {
     }
   };
 
-  const handleCreateMultiplayer = async () => {
+  const handleCreateMultiplayer = () => {
     try {
       const demoSessionId = "demo-multiplayer-session";
 
@@ -272,7 +272,7 @@ const HomePage: React.FC = () => {
     }
   };
 
-  const handleJoinSession = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleJoinSession = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const normalizedSessionId = sessionIdInput.trim();
