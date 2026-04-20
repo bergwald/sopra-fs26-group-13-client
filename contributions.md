@@ -76,8 +76,8 @@ reason).
 |                    | 19.04.2026   | [Commit 1563187](https://github.com/bergwald/sopra-fs26-group-13-client/commit/156318739bb6571e3506c2b47ffaf97b64634e08) | Created a React component to display Google Street View panoramas in the frontend and integrated the component in the demo page. | Viewing a panorama is a central part of the game. |
 | **@juliand924** | 18.04.2026   | [Commit 3306587](https://github.com/bergwald/sopra-fs26-group-13-server/commit/33065879888f082b450b3fff31934c5fb26c374a) | Add an additional attribute to the user session to see who is the owner and and which are the players. |To distinguish in the lobby the owner, which can start the game and the player, which cannot start a game. |
 |                    | 13.04.2026  | [Commit 703ea87](https://github.com/bergwald/sopra-fs26-group-13-server/commit/703ea8763f37aa6111f285f6c17b07aac105714d) | Added authentication to the session endpoints and added all the integration tests. | It is important, that only users, which are logged in and have a valid token, are able to get the sessions, create or join one. |
-| **[@githubUser4]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **@PAKaeser** | 19.04.2026   | [Commit bb3ef21](https://github.com/bergwald/sopra-fs26-group-13-server/commit/bb3ef2184846e00d27157f1456bf80a5625f7ec8) | responds to REST to GET on /game_data by handing back a DTO with correct URL | Frontend uses this object to know which image to get to display, so User can see which location to guess. |
+|                    | 19.04.2026   | [Commit 66ef9a2](https://github.com/bergwald/sopra-fs26-group-13-server/commit/66ef9a27b301084ab8cb079dd939edde80061205) | response to PUT on /submit_guess by saving additional score to DB and responding with actual location coordinates and score | User can see the actual location on the map and can see how he scored based on the response of the PUT request |
 
 ---
 
