@@ -82,7 +82,9 @@ const UserSettingsPage: React.FC = () => {
 
     const loadUser = async () => {
       try {
-        const fetchedUser = await apiService.get<User>(`/users/${parsedRouteUserId}`);
+        const fetchedUser = await apiService.get<User>(`/users/${parsedRouteUserId}`, {
+          Authorization: `Bearer ${token}`,
+        });
         const nextFormValues = {
           username: fetchedUser.username,
           bio: fetchedUser.bio ?? "",
