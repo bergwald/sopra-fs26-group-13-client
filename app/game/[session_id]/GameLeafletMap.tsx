@@ -8,8 +8,9 @@ type GuessCoordinates = {
   longitude: number;
 };
 
-type LeafletMapLike = {
+export type LeafletMapLike = {
   fitBounds: (bounds: [[number, number], [number, number]]) => void;
+  invalidateSize: () => void;
 };
 
 type LeafletClickEventLike = {

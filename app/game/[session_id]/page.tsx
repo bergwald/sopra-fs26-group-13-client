@@ -5,6 +5,7 @@ import React from "react";
 // import { useApi } from "@/hooks/useApi";
 // import type { ApplicationError } from "@/types/error";
 import GameStreetView from "@/components/GameStreetView";
+import type { LeafletMapLike } from "./GameLeafletMap";
 import type { GameData, GameSession, UserGuess } from "@/types/user";
 import "leaflet/dist/leaflet.css";
 import dynamic from "next/dynamic";
@@ -80,7 +81,7 @@ const GamePage: React.FC = () => {
     latitude: number;
     longitude: number;
   } | null>(null);
-  const leafletMapRef = React.useRef<any>(null);
+  const leafletMapRef = React.useRef<LeafletMapLike | null>(null);
 
   const sessionId = Array.isArray(params.session_id)
     ? params.session_id[0]
