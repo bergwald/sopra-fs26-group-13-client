@@ -175,6 +175,24 @@ export function clearStoredCurrentMascotId(): void {
   emitAuthTokenChanged();
 }
 
+export function setStoredToken(token: string): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (token.trim().length > 0) {
+    globalThis.localStorage.setItem(
+      AUTH_TOKEN_STORAGE_KEY,
+      JSON.stringify(token),
+    );
+    emitAuthTokenChanged();
+    return;
+  }
+
+  globalThis.localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+  emitAuthTokenChanged();
+}
+
 export function clearStoredToken(): void {
   if (typeof window === "undefined") {
     return;
