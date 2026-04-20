@@ -1,13 +1,10 @@
 "use client";
 
-// UNCOMMENT ALL LINES TO ACTIVATE REGISTER LOGIC
-// import { useApi } from "@/hooks/useApi";
-// import useLocalStorage from "@/hooks/useLocalStorage";
+import { useApi } from "@/hooks/useApi";
 import useRedirectIfAuthenticated from "@/hooks/useRedirectIfAuthenticated";
 import type { ApplicationError } from "@/types/error";
-import type { RegisterRequest } from "@/types/user";
-// import type { User } from "@/types/user";
-// import { setStoredCurrentUserId } from "@/utils/auth";
+import type { AuthResponse, RegisterRequest } from "@/types/user";
+import { setStoredCurrentUserId, setStoredToken } from "@/utils/auth";
 import { Alert, ConfigProvider, Form, Input } from "antd";
 import { ArrowRight, UserPlus } from "lucide-react";
 import Link from "next/link";
@@ -16,28 +13,26 @@ import React from "react";
 
 const RegisterPage: React.FC = () => {
   const router = useRouter();
-  // const apiService = useApi();
+  const apiService = useApi();
   const [form] = Form.useForm<RegisterRequest>();
   const [errorMessage, setErrorMessage] = React.useState<string>("");
   const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
   const isAuthChecked = useRedirectIfAuthenticated();
-  // const { set: setToken } = useLocalStorage<string>("token", "");
 
   const handleRegister = async (values: RegisterRequest) => {
     setErrorMessage("");
     setIsSubmitting(true);
 
     try {
-      // const response = await apiService.post<User>("/users", {
-      //   ...values,
-      //   bio: values.bio?.trim() ?? "",
-      // });
+      const response = await apiService.post<AuthResponse>("/users", {
+        username: values.username.trim(),
+        password: values.password,
+        bio: values.bio?.trim() ?? "",
+      });
 
-      // if (response.token) {
-      //   setToken(response.token);
-      //   setStoredCurrentUserId(response.id);
-      // }
-      // router.push(`/users/${response.id}`);
+      setStoredToken(response.token);
+      setStoredCurrentUserId(response.id);
+      router.push(`/users/${response.id}`);
     } catch (error) {
       const appError = error as ApplicationError;
 

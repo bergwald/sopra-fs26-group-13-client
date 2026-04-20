@@ -1,12 +1,23 @@
 export interface User {
+  id: number;
   username: string;
-  score: number;
-  creation_date: string;
   bio: string;
-  game_count: number;
-  win_rate: number;
-  average_distance: number;
-  mascot_id: number;
+  creationDate: string;
+  status?: string;
+  // score: number;
+  // creation_date: string;
+  // game_count: number;
+  // win_rate: number;
+  // average_distance: number;
+  // mascot_id: number;
+}
+
+export interface AuthResponse {
+  id: number;
+  username: string;
+  bio: string;
+  token: string;
+  status: string;
 }
 
 export interface RegisterRequest {
@@ -23,7 +34,6 @@ export interface LoginRequest {
 export interface UserSelfUpdateRequest {
   bio?: string;
   newPassword?: string;
-  mascot_id?: number;
 }
 
 export interface SessionUser {

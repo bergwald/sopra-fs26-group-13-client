@@ -1,14 +1,11 @@
 "use client";
 
-// UNCOMMENT ALL LINES TO ACTIVATE LOGIN LOGIC
-// import { useApi } from "@/hooks/useApi";
-// import useLocalStorage from "@/hooks/useLocalStorage";
+import { useApi } from "@/hooks/useApi";
 import useRedirectIfAuthenticated from "@/hooks/useRedirectIfAuthenticated";
 import type { ApplicationError } from "@/types/error";
-import type { LoginRequest } from "@/types/user";
-// import type { User } from "@/types/user";
-// import { setStoredCurrentUserId } from "@/utils/auth";
-import { ConfigProvider, Form, Input } from "antd";
+import type { AuthResponse, LoginRequest } from "@/types/user";
+import { setStoredCurrentUserId, setStoredToken } from "@/utils/auth";
+import { Alert, ConfigProvider, Form, Input } from "antd";
 import { LogIn } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -16,33 +13,34 @@ import React from "react";
 
 const LoginPage: React.FC = () => {
   const router = useRouter();
-  // const apiService = useApi();
+  const apiService = useApi();
   const [form] = Form.useForm<LoginRequest>();
   const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = React.useState<string>("");
   const isAuthChecked = useRedirectIfAuthenticated();
-  // const { set: setToken } = useLocalStorage<string>("token", "");
 
   const handleLogin = async (loginValues: LoginRequest) => {
     setIsSubmitting(true);
+    setErrorMessage("");
 
     try {
-      // const response = await apiService.post<User>("/login", loginValues);
+      const response = await apiService.post<AuthResponse>("/login", {
+        username: loginValues.username.trim(),
+        password: loginValues.password,
+      });
 
-      // if (response.token && response.id) {
-      //   setToken(response.token);
-      //   setStoredCurrentUserId(response.id);
-      // }
-
-      // router.push("/users/{response.id}");
+      setStoredToken(response.token);
+      setStoredCurrentUserId(response.id);
+      router.push(`/users/${response.id}`);
     } catch (error) {
       const appError = error as ApplicationError;
 
       if (appError.status === 401) {
-        alert("Invalid username or password.");
+        setErrorMessage("Invalid username or password.");
       } else if (error instanceof Error) {
-        alert(`Something went wrong during the login:\n${error.message}`);
+        setErrorMessage(error.message);
       } else {
-        console.error("An unknown error occurred during login.");
+        setErrorMessage("An unknown error occurred during login.");
       }
     } finally {
       setIsSubmitting(false);
@@ -91,7 +89,7 @@ const LoginPage: React.FC = () => {
             </div>
             <h2 className="login-title">Welcome Back</h2>
             <p className="login-subtitle">
-              Login to track your ELO and play with friends.
+              Login to track your account and continue playing.
             </p>
 
             <ConfigProvider
@@ -150,6 +148,12 @@ const LoginPage: React.FC = () => {
                     />
                   </Form.Item>
                 </div>
+
+                {errorMessage && (
+                  <Form.Item style={{ marginBottom: 0 }}>
+                    <Alert type="error" showIcon message={errorMessage} />
+                  </Form.Item>
+                )}
 
                 <button
                   type="submit"
