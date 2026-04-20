@@ -3,7 +3,6 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import {
-  getStoredCurrentMascotId,
   getStoredCurrentUserId,
   getStoredToken,
 } from "@/utils/auth";
@@ -20,9 +19,8 @@ export default function useRedirectIfAuthenticated(): boolean {
   React.useEffect(() => {
     const token = getStoredToken();
     const currentUserId = getStoredCurrentUserId();
-    const currentMascotId = getStoredCurrentMascotId();
 
-    if (token && currentUserId && currentMascotId) {
+    if (token && currentUserId) {
       router.replace(`/users/${currentUserId}`);
       return;
     }
