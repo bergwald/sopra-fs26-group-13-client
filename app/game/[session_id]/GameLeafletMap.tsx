@@ -8,11 +8,22 @@ type GuessCoordinates = {
   longitude: number;
 };
 
+type LeafletMapLike = {
+  fitBounds: (bounds: [[number, number], [number, number]]) => void;
+};
+
+type LeafletClickEventLike = {
+  latlng: {
+    lat: number;
+    lng: number;
+  };
+};
+
 type GameLeafletMapProps = {
   worldBounds: [[number, number], [number, number]];
   selectedGuess: GuessCoordinates | null;
   onGuessSelected: (nextGuess: GuessCoordinates) => void;
-  onMapReady: (mapInstance: { fitBounds: (bounds: [[number, number], [number, number]]) => void }) => void;
+  onMapReady: (mapInstance: LeafletMapLike) => void;
 };
 
 const clamp = (value: number, min: number, max: number): number => {
@@ -23,7 +34,7 @@ const MapClickHandler: React.FC<{
   onGuessSelected: (nextGuess: GuessCoordinates) => void;
 }> = ({ onGuessSelected }) => {
   useMapEvents({
-    click: (event: { latlng: { lat: number; lng: number } }) => {
+    click: (event: LeafletClickEventLike) => {
       const latitude = Number(clamp(event.latlng.lat, -90, 90).toFixed(5));
       const longitude = Number(clamp(event.latlng.lng, -180, 180).toFixed(5));
       onGuessSelected({ latitude, longitude });
@@ -39,12 +50,18 @@ const GameLeafletMap: React.FC<GameLeafletMapProps> = ({
   onGuessSelected,
   onMapReady,
 }) => {
+  const hasInitializedBoundsRef = React.useRef(false);
+
   return (
     <MapContainer
       className="game-osm-root"
       bounds={worldBounds}
-      whenReady={(event) => {
-        const mapInstance = event.target;
+      ref={(mapInstance) => {
+        if (!mapInstance || hasInitializedBoundsRef.current) {
+          return;
+        }
+
+        hasInitializedBoundsRef.current = true;
         onMapReady(mapInstance);
         mapInstance.fitBounds(worldBounds);
       }}
@@ -55,7 +72,6 @@ const GameLeafletMap: React.FC<GameLeafletMapProps> = ({
         <CircleMarker
           center={[selectedGuess.latitude, selectedGuess.longitude]}
           pathOptions={{
-            radius: 5,
             color: "#f43f5e",
             fillColor: "#fb7185",
             fillOpacity: 0.9,

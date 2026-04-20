@@ -207,6 +207,11 @@ const GamePage: React.FC = () => {
     }
   }, [mapExpanded]);
 
+  const worldBounds = React.useMemo<[[number, number], [number, number]]>(
+    () => [[-60, -180], [85, 180]],
+    [],
+  );
+
   const handleSubmitGuess = () => {
     if (!selectedGuess || !currentUserId) {
       return;
@@ -260,7 +265,6 @@ const GamePage: React.FC = () => {
   }
 
   const roundLabel = `${session.round_number}/${Math.min(session.total_rounds, 3)}`;
-  const worldBounds: [[number, number], [number, number]] = [[-60, -180], [85, 180]];
 
   return (
     <div className="game-page-shell">
