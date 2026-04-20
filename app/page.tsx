@@ -3,7 +3,6 @@
 // UNCOMMENT ALL LINES TO ACTIVATE HOMEPAGE API LOGIC
 // import { useApi } from "@/hooks/useApi";
 // import type { ApplicationError } from "@/types/error";
-import type { User } from "@/types/user";
 import {
   getStoredCurrentMascotId,
   getStoredCurrentUserId,
@@ -23,8 +22,16 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
 
-type LeaderboardUser = User & {
+type LeaderboardUser = {
   id: number;
+  username: string;
+  bio: string;
+  creation_date: string;
+  score: number;
+  game_count: number;
+  win_rate: number;
+  average_distance: number;
+  mascot_id: number;
 };
 
 const MASCOT_IMAGES: Record<number, string> = {
