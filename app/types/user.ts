@@ -50,12 +50,13 @@ export interface GameSession {
 }
 
 export interface GameData {
-  wikidata_url: string;
+  panorama_id: string;
   round_number: number;
   latitude: number;
   longitude: number;
-  location_name?: string;
   expiry_date: string;
+  // wikidata_url: string;
+  // location_name?: string;
 }
 
 export interface UserGuess {
@@ -69,4 +70,28 @@ export interface UserGuess {
 export interface GameResult {
   username: string;
   score: number;
+}
+
+export interface BackendSessionUserDetails {
+  id: number;
+  sessionId: string;
+  sessionExpiryDateTime: string;
+  roundNumber: number;
+  score: number;
+  userRole: "OWNER" | "PLAYER";
+}
+
+export interface BackendGameData {
+  imageUrl: string;
+  roundNumber: number;
+  sessionId: string;
+}
+
+export interface GameRoundResult {
+  round_number: number;
+  distance: number;
+  scoreRound: number;
+  scoreOverall: number;
+  latitude: number;
+  longitude: number;
 }
