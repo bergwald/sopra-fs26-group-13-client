@@ -1,7 +1,5 @@
 "use client";
 
-import { useApi } from "@/hooks/useApi";
-import type { GooglePanoramaCandidate } from "@/types/google";
 import React from "react";
 
 type StreetViewState =
@@ -20,8 +18,7 @@ type StreetViewState =
   };
 
 interface GameStreetViewProps {
-  panoramaId?: string | null;
-  onPanoramaLoaded?: (candidate: GooglePanoramaCandidate) => void;
+  panoramaId: string | null;
 }
 
 interface GoogleMapsApi {
@@ -87,21 +84,6 @@ const GOOGLE_MAPS_CALLBACK = "__initGameStreetViewGoogleMaps";
 const GOOGLE_MAPS_SCRIPT_SELECTOR = 'script[data-google-maps-loader="game-street-view"]';
 
 let googleMapsApiPromise: Promise<GoogleMapsApi> | null = null;
-let panoramaCandidatePromise: Promise<GooglePanoramaCandidate> | null = null;
-
-function validateGooglePanoramaCandidate(candidate: unknown): GooglePanoramaCandidate {
-  if (
-    typeof candidate !== "object" || candidate === null ||
-    !("provider" in candidate) || candidate.provider !== "google-street-view" ||
-    !("panoId" in candidate) || typeof candidate.panoId !== "string" ||
-    !("latitude" in candidate) || typeof candidate.latitude !== "number" ||
-    !("longitude" in candidate) || typeof candidate.longitude !== "number"
-  ) {
-    throw new Error("The backend returned an invalid Street View panorama payload.");
-  }
-
-  return candidate as GooglePanoramaCandidate;
-}
 
 function loadGoogleMapsApi(apiKey: string): Promise<GoogleMapsApi> {
   if (typeof window === "undefined") {
@@ -198,20 +180,6 @@ function loadGoogleMapsApi(apiKey: string): Promise<GoogleMapsApi> {
   return googleMapsApiPromise;
 }
 
-function fetchPanoramaCandidate(
-  apiService: ReturnType<typeof useApi>,
-): Promise<GooglePanoramaCandidate> {
-  if (panoramaCandidatePromise) {
-    return panoramaCandidatePromise;
-  }
-
-  panoramaCandidatePromise = apiService
-    .get<GooglePanoramaCandidate>("/google/panorama")
-    .then(validateGooglePanoramaCandidate);
-
-  return panoramaCandidatePromise;
-}
-
 function getStreetViewErrorMessage(status: string, unavailableStatus: string): string {
   if (status === unavailableStatus) {
     return "Google Street View is unavailable for the panorama returned by the backend.";
@@ -222,22 +190,15 @@ function getStreetViewErrorMessage(status: string, unavailableStatus: string): s
 
 const GameStreetViewComponent: React.FC<GameStreetViewProps> = ({
   panoramaId,
-  onPanoramaLoaded,
 }) => {
-  const apiService = useApi();
   const panoramaContainerRef = React.useRef<HTMLDivElement | null>(null);
   const panoramaRef = React.useRef<StreetViewPanoramaInstance | null>(null);
   const panoramaListenerRef = React.useRef<GoogleMapsListener | null>(null);
-  const onPanoramaLoadedRef = React.useRef(onPanoramaLoaded);
   const [state, setState] = React.useState<StreetViewState>({
     kind: "loading",
     title: "Loading Street View",
-    message: "Requesting a panorama candidate from the backend.",
+    message: "Loading the saved panorama for this round.",
   });
-
-  React.useEffect(() => {
-    onPanoramaLoadedRef.current = onPanoramaLoaded;
-  }, [onPanoramaLoaded]);
 
   React.useEffect(() => {
     let isCancelled = false;
@@ -255,6 +216,15 @@ const GameStreetViewComponent: React.FC<GameStreetViewProps> = ({
         return;
       }
 
+      if (!panoramaId) {
+        setState({
+          kind: "error",
+          title: "Missing panorama",
+          message: "This round does not include a Street View panorama ID.",
+        });
+        return;
+      }
+
       const container = panoramaContainerRef.current;
 
       if (!container) {
@@ -265,27 +235,8 @@ const GameStreetViewComponent: React.FC<GameStreetViewProps> = ({
         setState({
           kind: "loading",
           title: "Loading Street View",
-          message: panoramaId
-            ? "Loading the saved panorama for this round."
-            : "Requesting a panorama candidate from the backend.",
+          message: "Loading the saved panorama for this round.",
         });
-
-        const candidate = panoramaId
-          ? {
-            provider: "google-street-view" as const,
-            panoId: panoramaId,
-            latitude: 0,
-            longitude: 0,
-          }
-          : await fetchPanoramaCandidate(apiService);
-
-        if (isCancelled) {
-          return;
-        }
-
-        if (!panoramaId) {
-          onPanoramaLoadedRef.current?.(candidate);
-        }
 
         setState({
           kind: "loading",
@@ -313,7 +264,7 @@ const GameStreetViewComponent: React.FC<GameStreetViewProps> = ({
         }
 
         const streetViewService = new StreetViewService();
-        await streetViewService.getPanorama({ pano: candidate.panoId });
+        await streetViewService.getPanorama({ pano: panoramaId });
 
         if (isCancelled) {
           return;
@@ -370,7 +321,7 @@ const GameStreetViewComponent: React.FC<GameStreetViewProps> = ({
             }
           });
 
-          panorama.setPano(candidate.panoId);
+          panorama.setPano(panoramaId);
 
           if (panorama.getStatus() === StreetViewStatus.OK) {
             globalThis.clearTimeout(timeoutId);
@@ -415,7 +366,7 @@ const GameStreetViewComponent: React.FC<GameStreetViewProps> = ({
         panoramaContainerRef.current.innerHTML = "";
       }
     };
-  }, [apiService, panoramaId]);
+  }, [panoramaId]);
 
   return (
     <div className="game-street-view-shell">
