@@ -20,6 +20,7 @@ type StreetViewState =
   };
 
 interface GameStreetViewProps {
+  panoramaId?: string | null;
   onPanoramaLoaded?: (candidate: GooglePanoramaCandidate) => void;
 }
 
@@ -219,7 +220,10 @@ function getStreetViewErrorMessage(status: string, unavailableStatus: string): s
   return "Google Street View could not render the selected panorama.";
 }
 
-const GameStreetViewComponent: React.FC<GameStreetViewProps> = ({ onPanoramaLoaded }) => {
+const GameStreetViewComponent: React.FC<GameStreetViewProps> = ({
+  panoramaId,
+  onPanoramaLoaded,
+}) => {
   const apiService = useApi();
   const panoramaContainerRef = React.useRef<HTMLDivElement | null>(null);
   const panoramaRef = React.useRef<StreetViewPanoramaInstance | null>(null);
@@ -261,16 +265,27 @@ const GameStreetViewComponent: React.FC<GameStreetViewProps> = ({ onPanoramaLoad
         setState({
           kind: "loading",
           title: "Loading Street View",
-          message: "Requesting a panorama candidate from the backend.",
+          message: panoramaId
+            ? "Loading the saved panorama for this round."
+            : "Requesting a panorama candidate from the backend.",
         });
 
-        const candidate = await fetchPanoramaCandidate(apiService);
+        const candidate = panoramaId
+          ? {
+            provider: "google-street-view" as const,
+            panoId: panoramaId,
+            latitude: 0,
+            longitude: 0,
+          }
+          : await fetchPanoramaCandidate(apiService);
 
         if (isCancelled) {
           return;
         }
 
-        onPanoramaLoadedRef.current?.(candidate);
+        if (!panoramaId) {
+          onPanoramaLoadedRef.current?.(candidate);
+        }
 
         setState({
           kind: "loading",
@@ -400,7 +415,7 @@ const GameStreetViewComponent: React.FC<GameStreetViewProps> = ({ onPanoramaLoad
         panoramaContainerRef.current.innerHTML = "";
       }
     };
-  }, [apiService]);
+  }, [apiService, panoramaId]);
 
   return (
     <div className="game-street-view-shell">
