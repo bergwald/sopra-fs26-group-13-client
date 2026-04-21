@@ -1383,6 +1383,12 @@ a {
   height: min(34vh, 22rem);
 }
 
+.game-osm-root {
+  width: 100%;
+  height: 100%;
+  border-radius: 1.15rem;
+}
+
 .game-map-placeholder {
   position: absolute;
   inset: 0;

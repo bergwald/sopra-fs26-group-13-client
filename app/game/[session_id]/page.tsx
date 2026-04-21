@@ -5,14 +5,16 @@ import React from "react";
 // import { useApi } from "@/hooks/useApi";
 // import type { ApplicationError } from "@/types/error";
 import GameStreetView from "@/components/GameStreetView";
+import type { LeafletMapLike } from "./GameLeafletMap";
 import type { GameData, GameSession, UserGuess } from "@/types/user";
+import "leaflet/dist/leaflet.css";
+import dynamic from "next/dynamic";
 import {
   getStoredCurrentMascotId,
   getStoredCurrentUserId,
 } from "@/utils/auth";
 import {
   Clock3,
-  Crosshair,
   Expand,
   Flag,
   Minimize,
@@ -59,9 +61,7 @@ const formatTimeLeft = (expiryDate: string): string => {
   return `${minutes}:${seconds}`;
 };
 
-const clamp = (value: number, min: number, max: number): number => {
-  return Math.min(Math.max(value, min), max);
-};
+const GameLeafletMap = dynamic(() => import("./GameLeafletMap"), { ssr: false });
 
 const GamePage: React.FC = () => {
   const router = useRouter();
@@ -78,11 +78,10 @@ const GamePage: React.FC = () => {
     formatTimeLeft(DEFAULT_SESSION.expiry_date),
   );
   const [selectedGuess, setSelectedGuess] = React.useState<{
-    x: number;
-    y: number;
     latitude: number;
     longitude: number;
   } | null>(null);
+  const leafletMapRef = React.useRef<LeafletMapLike | null>(null);
 
   const sessionId = Array.isArray(params.session_id)
     ? params.session_id[0]
@@ -202,29 +201,17 @@ const GamePage: React.FC = () => {
     return () => globalThis.clearInterval(timer);
   }, [session.expiry_date]);
 
-  const handleMapClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (!mapExpanded) {
-      setMapExpanded(true);
-      return;
+  React.useEffect(() => {
+    if (leafletMapRef.current) {
+      // Allow CSS transition/layout to settle before recomputing map size.
+      globalThis.setTimeout(() => leafletMapRef.current?.invalidateSize(), 200);
     }
+  }, [mapExpanded]);
 
-    const bounds = event.currentTarget.getBoundingClientRect();
-    const relativeX = clamp((event.clientX - bounds.left) / bounds.width, 0, 1);
-    const relativeY = clamp((event.clientY - bounds.top) / bounds.height, 0, 1);
-
-    // Temporary placeholder conversion so teammates already have state to wire
-    // into OpenStreetMap click handling. Replace this with real lat/lng values
-    // from the map library once the interactive map is mounted.
-    const latitude = Number((90 - relativeY * 180).toFixed(5));
-    const longitude = Number((relativeX * 360 - 180).toFixed(5));
-
-    setSelectedGuess({
-      x: relativeX * 100,
-      y: relativeY * 100,
-      latitude,
-      longitude,
-    });
-  };
+  const worldBounds = React.useMemo<[[number, number], [number, number]]>(
+    () => [[-60, -180], [85, 180]],
+    [],
+  );
 
   const handleSubmitGuess = () => {
     if (!selectedGuess || !currentUserId) {
@@ -351,7 +338,7 @@ const GamePage: React.FC = () => {
               <div className="game-map-header">
                 <div>
                   <p className="game-map-header-eyebrow">Guess Map</p>
-                  <h2 className="game-map-header-title">OpenStreetMap goes here</h2>
+                  <h2 className="game-map-header-title">OpenStreetMap</h2>
                 </div>
                 <button
                   type="button"
@@ -367,32 +354,15 @@ const GamePage: React.FC = () => {
                 </button>
               </div>
 
-              <div className="game-map-body" onClick={handleMapClick}>
-                {/* Real OpenStreetMap integration can be mounted inside this box.
-                    Example inspiration for teammates:
-                    <MapContainer center={[20, 0]} zoom={2} scrollWheelZoom className="game-osm-root">
-                      <TileLayer
-                        attribution='&copy; OpenStreetMap contributors'
-                        url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-                      />
-                    </MapContainer>
-                */}
-                <div className="game-map-placeholder">
-                  <div className="game-map-placeholder-continents" />
-                  <div className="game-map-placeholder-copy">
-                    <span className="game-map-placeholder-title">Interactive Map Placeholder</span>
-                    <span>Click once to expand, click again to place a mock marker.</span>
-                  </div>
-                </div>
-
-                {selectedGuess && (
-                  <div
-                    className="game-map-marker"
-                    style={{ left: `${selectedGuess.x}%`, top: `${selectedGuess.y}%` }}
-                  >
-                    <Crosshair className="game-map-marker-icon" />
-                  </div>
-                )}
+              <div className="game-map-body">
+                <GameLeafletMap
+                  worldBounds={worldBounds}
+                  selectedGuess={selectedGuess}
+                  onGuessSelected={setSelectedGuess}
+                  onMapReady={(mapInstance) => {
+                    leafletMapRef.current = mapInstance;
+                  }}
+                />
               </div>
 
               <div className="game-map-footer">
