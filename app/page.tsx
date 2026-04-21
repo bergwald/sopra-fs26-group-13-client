@@ -1,8 +1,7 @@
 "use client";
 
-// UNCOMMENT ALL LINES TO ACTIVATE HOMEPAGE API LOGIC
-// import { useApi } from "@/hooks/useApi";
-// import type { ApplicationError } from "@/types/error";
+import { useApi } from "@/hooks/useApi";
+import type { ApplicationError } from "@/types/error";
 import {
   getStoredCurrentMascotId,
   getStoredCurrentUserId,
@@ -170,7 +169,7 @@ const formatDistance = (distance: number): string => {
 
 const HomePage: React.FC = () => {
   const router = useRouter();
-  // const apiService = useApi();
+  const apiService = useApi();
   const [currentUserId, setCurrentUserId] = React.useState<number | null>(null);
   const [currentMascotId, setCurrentMascotId] = React.useState<number | null>(null);
   const [leaderboardUsers, setLeaderboardUsers] = React.useState<LeaderboardUser[]>(
@@ -231,22 +230,37 @@ const HomePage: React.FC = () => {
     ? MASCOT_IMAGES[currentMascotId] ?? MASCOT_IMAGES[1]
     : null;
 
-  const handleSingleplayer = () => {
+  const handleSingleplayer = async () => {
+    const token = getStoredToken();
+
+    if (!token || !currentUserId) {
+      router.push("/login");
+      return;
+    }
+
     try {
-      const demoSessionId = "1";
+      const response = await apiService.post<{
+        id: string;
+        sessionExpiryDateTime: string;
+        roundNumber: number;
+      }>(
+        "/session",
+        { userId: currentUserId },
+        {
+          Authorization: `Bearer ${token}`,
+          userId: String(currentUserId),
+        },
+      );
 
-      // Example backend direction:
-      // const response = await apiService.post<GameSession>(
-      //   "/sessions/singleplayer",
-      //   undefined,
-      //   { Authorization: `Bearer ${getStoredToken()}` },
-      // );
-      //
-      // A real singleplayer response should contain the new session ID.
-      // router.push(`/game/${response.session_id}`);
-
-      router.push(`/game/${demoSessionId}`);
+      router.push(`/game/${response.id}`);
     } catch (error) {
+      const appError = error as ApplicationError;
+
+      if (appError.status === 401 || appError.status === 403) {
+        router.push("/login");
+        return;
+      }
+
       if (error instanceof Error) {
         alert(`Something went wrong while creating a singleplayer session:\n${error.message}`);
       } else {
@@ -318,7 +332,7 @@ const HomePage: React.FC = () => {
             <div className="login-page-brand-icon" aria-hidden="true">
               G
             </div>
-            <span className="login-page-brand-text">GeoGuess</span>
+            <span className="login-page-brand-text">MountainGuessr</span>
           </Link>
         </div>
 
@@ -359,7 +373,7 @@ const HomePage: React.FC = () => {
           <div className="home-play-grid">
             <button
               type="button"
-              onClick={handleSingleplayer}
+              onClick={() => void handleSingleplayer()}
               className="home-play-card home-play-card-blue"
             >
               <div className="home-play-icon-wrap home-play-icon-wrap-blue">

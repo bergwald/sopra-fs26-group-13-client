@@ -64,7 +64,7 @@ const RegisterPage: React.FC = () => {
             <div className="login-page-brand-icon" aria-hidden="true">
               G
             </div>
-            <span className="login-page-brand-text">GeoGuess</span>
+            <span className="login-page-brand-text">MountainGuessr</span>
           </Link>
         </div>
 
@@ -175,7 +175,7 @@ const RegisterPage: React.FC = () => {
 
                 {errorMessage && (
                   <Form.Item style={{ marginBottom: 0 }}>
-                    <Alert type="error" showIcon message={errorMessage} />
+                    <Alert type="error" showIcon title={errorMessage} />
                   </Form.Item>
                 )}
 

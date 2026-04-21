@@ -1,18 +1,26 @@
 "use client";
 
 import React from "react";
-// UNCOMMENT ALL LINES TO ACTIVATE GAME PAGE API LOGIC
-// import { useApi } from "@/hooks/useApi";
-// import type { ApplicationError } from "@/types/error";
+import { useApi } from "@/hooks/useApi";
+import type { ApplicationError } from "@/types/error";
 import GameStreetView from "@/components/GameStreetView";
 import type { LeafletMapLike } from "./GameLeafletMap";
-import type { GameData, GameSession, UserGuess } from "@/types/user";
+import type {
+  BackendGameData,
+  BackendSessionUserDetails,
+  GameData,
+  GameRoundResult,
+  GameSession,
+  UserGuess,
+} from "@/types/user";
 import "leaflet/dist/leaflet.css";
 import dynamic from "next/dynamic";
 import {
   getStoredCurrentMascotId,
   getStoredCurrentUserId,
+  getStoredToken,
 } from "@/utils/auth";
+import { storeSinglePlayerRoundResult } from "@/utils/singleplayerResult";
 import {
   Clock3,
   Expand,
@@ -22,6 +30,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+
+const TOTAL_ROUNDS = 3;
 
 const MASCOT_IMAGES: Record<number, string> = {
   1: "/mascots/earth-sunglasses.svg",
@@ -33,19 +43,19 @@ const MASCOT_IMAGES: Record<number, string> = {
 const DEFAULT_SESSION: GameSession = {
   session_id: "sample-session",
   expiry_date: new Date(Date.now() + 1000 * 60 * 2 + 1000 * 17).toISOString(),
-  round_number: 2,
-  total_rounds: 5,
+  round_number: 1,
+  total_rounds: TOTAL_ROUNDS,
   mode: "singleplayer",
 };
 
 const DEFAULT_GAME_DATA: GameData = {
-  wikidata_url:
-    "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=1600&q=80",
-  round_number: 2,
-  latitude: 46.948,
-  longitude: 7.4474,
-  location_name: "Bern",
+  panorama_id: "",
+  round_number: 1,
+  latitude: 0,
+  longitude: 0,
   expiry_date: DEFAULT_SESSION.expiry_date,
+  // wikidata_url: "",
+  // location_name: "",
 };
 
 const formatTimeLeft = (expiryDate: string): string => {
@@ -61,22 +71,58 @@ const formatTimeLeft = (expiryDate: string): string => {
   return `${minutes}:${seconds}`;
 };
 
+const buildAuthorizedHeaders = (token: string, userId: number): HeadersInit => {
+  return {
+    Authorization: `Bearer ${token}`,
+    userId: String(userId),
+  };
+};
+
+const mapSessionDetailsToGameSession = (
+  sessionUser: BackendSessionUserDetails,
+): GameSession => {
+  return {
+    session_id: sessionUser.sessionId,
+    expiry_date: sessionUser.sessionExpiryDateTime,
+    round_number: sessionUser.roundNumber,
+    total_rounds: TOTAL_ROUNDS,
+    mode: "singleplayer",
+  };
+};
+
+const mapBackendGameDataToGameData = (
+  backendGameData: BackendGameData,
+  session: GameSession,
+): GameData => {
+  return {
+    panorama_id: backendGameData.imageUrl,
+    round_number: backendGameData.roundNumber,
+    latitude: DEFAULT_GAME_DATA.latitude,
+    longitude: DEFAULT_GAME_DATA.longitude,
+    expiry_date: session.expiry_date,
+    // wikidata_url: backendGameData.imageUrl,
+    // location_name: "",
+  };
+};
+
 const GameLeafletMap = dynamic(() => import("./GameLeafletMap"), { ssr: false });
 
 const GamePage: React.FC = () => {
   const router = useRouter();
   const params = useParams<{ session_id: string }>();
-  // const apiService = useApi();
+  const apiService = useApi();
   const [currentUserId, setCurrentUserId] = React.useState<number | null>(null);
   const [currentMascotId, setCurrentMascotId] = React.useState<number | null>(null);
   const [session, setSession] = React.useState<GameSession>(DEFAULT_SESSION);
-  const [, setGameData] = React.useState<GameData>(DEFAULT_GAME_DATA);
+  const [gameData, setGameData] = React.useState<GameData>(DEFAULT_GAME_DATA);
   const [isAuthorized, setIsAuthorized] = React.useState<boolean>(false);
+  const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [mapExpanded, setMapExpanded] = React.useState<boolean>(false);
   const [hasSubmittedGuess, setHasSubmittedGuess] = React.useState<boolean>(false);
   const [timeLeft, setTimeLeft] = React.useState<string>(
     formatTimeLeft(DEFAULT_SESSION.expiry_date),
   );
+  const [errorMessage, setErrorMessage] = React.useState<string>("");
   const [selectedGuess, setSelectedGuess] = React.useState<{
     latitude: number;
     longitude: number;
@@ -89,29 +135,21 @@ const GamePage: React.FC = () => {
   const navProfileImage = currentMascotId
     ? MASCOT_IMAGES[currentMascotId] ?? MASCOT_IMAGES[1]
     : null;
-  const handlePanoramaLoaded = React.useCallback((candidate: {
-    latitude: number;
-    longitude: number;
-  }) => {
-    setGameData((previousGameData) => ({
-      ...previousGameData,
-      latitude: candidate.latitude,
-      longitude: candidate.longitude,
-    }));
-  }, []);
 
-  const loadGamePageData = React.useCallback(() => {
+  const loadGamePageData = React.useCallback(async () => {
+    const token = getStoredToken();
     const storedCurrentUserId = getStoredCurrentUserId();
     const storedCurrentMascotId = getStoredCurrentMascotId();
 
     setCurrentUserId(storedCurrentUserId);
     setCurrentMascotId(storedCurrentMascotId);
+    setIsLoading(true);
+    setErrorMessage("");
 
-    // Redirect guests or broken auth state back to the landing page.
-    // if (!token || !storedCurrentUserId) {
-    //   router.replace("/");
-    //   return;
-    // }
+    if (!token || !storedCurrentUserId) {
+      router.replace("/login");
+      return;
+    }
 
     if (!sessionId) {
       router.replace("/");
@@ -119,54 +157,61 @@ const GamePage: React.FC = () => {
     }
 
     try {
-      // Check whether the logged-in user is actually part of this session.
-      // Example backend direction from your DB design:
-      // await apiService.get<SessionUser>(
-      //   `/sessions/${sessionId}/users/${storedCurrentUserId}`,
-      //   { Authorization: `Bearer ${token}` },
-      // );
+      const headers = buildAuthorizedHeaders(token, storedCurrentUserId);
+      const sessionUsers = await apiService.get<BackendSessionUserDetails[]>(
+        `/session/${sessionId}`,
+        headers,
+      );
+      const currentSessionUser = sessionUsers.find((sessionUser) => {
+        return sessionUser.id === storedCurrentUserId;
+      });
 
-      // Load the session-level state such as round number and expiry date.
-      // const fetchedSession = await apiService.get<GameSession>(
-      //   `/sessions/${sessionId}`,
-      //   { Authorization: `Bearer ${token}` },
-      // );
+      if (!currentSessionUser) {
+        router.replace("/");
+        return;
+      }
 
-      // Load round data from your game service. This should eventually give
-      // you the Wikidata image URL plus the correct coordinates for scoring.
-      // const fetchedGameData = await apiService.get<GameData>(
-      //   `/games/${sessionId}/rounds/${fetchedSession.round_number}`,
-      //   { Authorization: `Bearer ${token}` },
-      // );
+      if (currentSessionUser.roundNumber > TOTAL_ROUNDS) {
+        router.replace(`/result/${sessionId}?round=${TOTAL_ROUNDS}`);
+        return;
+      }
 
-      setSession((previousSession) => ({
-        ...previousSession,
-        session_id: sessionId,
-      }));
-      setGameData((previousGameData) => ({
-        ...previousGameData,
-        round_number: DEFAULT_SESSION.round_number,
-      }));
+      const mappedSession = mapSessionDetailsToGameSession(currentSessionUser);
+      const backendGameData = await apiService.get<BackendGameData>(
+        `/game_data?sessionId=${encodeURIComponent(sessionId)}&roundNumber=${currentSessionUser.roundNumber}`,
+        headers,
+      );
+
+      setSession(mappedSession);
+      setGameData(mapBackendGameDataToGameData(backendGameData, mappedSession));
+      setSelectedGuess(null);
+      setHasSubmittedGuess(false);
       setIsAuthorized(true);
     } catch (error) {
-      // const appError = error as ApplicationError;
+      const appError = error as ApplicationError;
 
-      // Use this branch later once the protected endpoints exist.
-      // if (appError.status === 401 || appError.status === 403 || appError.status === 404) {
-      //   router.replace("/");
-      //   return;
-      // }
-
-      if (error instanceof Error) {
-        alert(`Something went wrong while loading the game page:\n${error.message}`);
-      } else {
-        alert("Something went wrong while loading the game page.");
+      if (appError.status === 401 || appError.status === 403) {
+        router.replace("/login");
+        return;
       }
+
+      if (appError.status === 404) {
+        router.replace("/");
+        return;
+      }
+
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong while loading the game page.",
+      );
+    } finally {
+      setIsLoading(false);
     }
-  }, [router, sessionId]);
+  }, [apiService, router, sessionId]);
 
   React.useEffect(() => {
-    loadGamePageData();
+    void loadGamePageData();
   }, [loadGamePageData]);
 
   React.useEffect(() => {
@@ -185,17 +230,8 @@ const GamePage: React.FC = () => {
   React.useEffect(() => {
     setTimeLeft(formatTimeLeft(session.expiry_date));
 
-    // Poll once per second so the round timer stays in sync with the backend
-    // expiry date. If your backend sends a refreshed expiry_date, update
-    // `session.expiry_date` and this display will follow automatically.
     const timer = globalThis.setInterval(() => {
       setTimeLeft(formatTimeLeft(session.expiry_date));
-
-      // Once the timer hits zero, the frontend can ask the backend whether the
-      // round is finished and whether it should redirect to the result page.
-      // if (new Date(session.expiry_date).getTime() <= Date.now()) {
-      //   await apiService.get(`/games/${session.session_id}/rounds/${session.round_number}/status`);
-      // }
     }, 1000);
 
     return () => globalThis.clearInterval(timer);
@@ -203,7 +239,6 @@ const GamePage: React.FC = () => {
 
   React.useEffect(() => {
     if (leafletMapRef.current) {
-      // Allow CSS transition/layout to settle before recomputing map size.
       globalThis.setTimeout(() => leafletMapRef.current?.invalidateSize(), 200);
     }
   }, [mapExpanded]);
@@ -213,8 +248,10 @@ const GamePage: React.FC = () => {
     [],
   );
 
-  const handleSubmitGuess = () => {
-    if (!selectedGuess || !currentUserId) {
+  const handleSubmitGuess = async () => {
+    const token = getStoredToken();
+
+    if (!selectedGuess || !currentUserId || !token) {
       return;
     }
 
@@ -229,43 +266,56 @@ const GamePage: React.FC = () => {
     try {
       setHasSubmittedGuess(true);
 
-      // Submit the guess once your backend route exists.
-      // await apiService.post<void>(
-      //   `/games/${session.session_id}/guess`,
-      //   guessPayload,
-      //   { Authorization: `Bearer ${getStoredToken()}` },
-      // );
+      const roundResultResponse = await apiService.put<Omit<GameRoundResult, "round_number">>(
+        "/submit_guess",
+        {
+          userId: guessPayload.user_id,
+          sessionId: guessPayload.session_id,
+          roundNumber: guessPayload.round_number,
+          latitude: guessPayload.latitude,
+          longitude: guessPayload.longitude,
+        },
+        buildAuthorizedHeaders(token, currentUserId),
+      );
 
-      // In singleplayer the backend can respond with the next redirect target
-      // immediately after scoring the guess.
-      // if (session.mode === "singleplayer") {
-      //   router.push(`/result/${session.session_id}`);
-      //   return;
-      // }
+      const roundResult: GameRoundResult = {
+        round_number: session.round_number,
+        ...roundResultResponse,
+      };
 
-      // In multiplayer keep the user on this page after submission and wait for
-      // the expiry_date loop above to detect the round transition.
-      // if (session.mode === "multiplayer") {
-      //   await apiService.get(`/games/${session.session_id}/rounds/${session.round_number}/status`);
-      // }
+      storeSinglePlayerRoundResult(session.session_id, roundResult);
+      router.push(`/result/${session.session_id}?round=${session.round_number}`);
     } catch (error) {
+      const appError = error as ApplicationError;
       setHasSubmittedGuess(false);
 
-      if (error instanceof Error) {
-        alert(`Something went wrong while submitting the guess:\n${error.message}`);
-      } else {
-        alert("Something went wrong while submitting the guess.");
+      if (appError.status === 401 || appError.status === 403) {
+        router.replace("/login");
+        return;
       }
-    }
 
-    void guessPayload;
+      if (appError.status === 404) {
+        router.replace("/");
+        return;
+      }
+
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong while submitting the guess.",
+      );
+    }
   };
 
-  if (!isAuthorized) {
-    return null;
+  if (isLoading || !isAuthorized) {
+    return (
+      <div className="login-container">
+        {errorMessage || "Loading game session..."}
+      </div>
+    );
   }
 
-  const roundLabel = `${session.round_number}/${Math.min(session.total_rounds, 3)}`;
+  const roundLabel = `${session.round_number}/${session.total_rounds}`;
 
   return (
     <div className="game-page-shell">
@@ -277,14 +327,14 @@ const GamePage: React.FC = () => {
             <div className="login-page-brand-icon" aria-hidden="true">
               G
             </div>
-            <span className="login-page-brand-text">GeoGuess</span>
+            <span className="login-page-brand-text">MountainGuessr</span>
           </Link>
         </div>
 
         <div className="game-page-nav-center">
           <div className="game-page-status-pill">
             <Clock3 className="game-page-status-icon" />
-            <span>Round Timer</span>
+            <span>Session Timer</span>
             <strong>{timeLeft}</strong>
           </div>
         </div>
@@ -311,7 +361,7 @@ const GamePage: React.FC = () => {
 
       <main className="game-page-main">
         <section className="game-hero-panel">
-          <GameStreetView onPanoramaLoaded={handlePanoramaLoaded} />
+          <GameStreetView panoramaId={gameData.panorama_id} />
           <div className="game-hero-vignette" />
           <div className="game-hero-grid" />
 
@@ -378,15 +428,11 @@ const GamePage: React.FC = () => {
                 <button
                   type="button"
                   className="game-submit-button"
-                  onClick={handleSubmitGuess}
+                  onClick={() => void handleSubmitGuess()}
                   disabled={!selectedGuess || hasSubmittedGuess}
                 >
                   <Flag className="game-submit-button-icon" />
-                  <span>
-                    {hasSubmittedGuess && session.mode === "multiplayer"
-                      ? "Guess Submitted"
-                      : "Submit Guess"}
-                  </span>
+                  <span>{hasSubmittedGuess ? "Submitting..." : "Submit Guess"}</span>
                 </button>
               </div>
             </section>

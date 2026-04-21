@@ -125,7 +125,7 @@ const UserProfilePage: React.FC = () => {
             <div className="login-page-brand-icon" aria-hidden="true">
               G
             </div>
-            <span className="login-page-brand-text">GeoGuess</span>
+            <span className="login-page-brand-text">MountainGuessr</span>
           </Link>
         </div>
 
