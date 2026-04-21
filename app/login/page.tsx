@@ -151,7 +151,7 @@ const LoginPage: React.FC = () => {
 
                 {errorMessage && (
                   <Form.Item style={{ marginBottom: 0 }}>
-                    <Alert type="error" showIcon message={errorMessage} />
+                    <Alert type="error" showIcon title={errorMessage} />
                   </Form.Item>
                 )}
 
