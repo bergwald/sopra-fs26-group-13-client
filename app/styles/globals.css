@@ -1989,6 +1989,14 @@ a {
   .game-submit-button {
     width: 100%;
   }
+
+  .result-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .result-page-main {
+    padding-top: 96px;
+  }
 }
 
 @media (max-width: 640px) {
@@ -2284,6 +2292,64 @@ a {
   background: rgba(129, 140, 248, 0.2);
 }
 
+.result-page-main {
+  align-items: flex-start;
+  padding-top: 112px;
+  padding-bottom: 48px;
+}
+
+.result-card {
+  max-width: 46rem;
+}
+
+.result-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.result-card-content .login-title,
+.result-card-content .login-subtitle {
+  margin-bottom: 0;
+}
+
+.result-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  width: 100%;
+}
+
+.result-summary-card {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 1.25rem;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(239, 246, 255, 0.7)),
+    rgba(255, 255, 255, 0.72);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+}
+
+.result-summary-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.result-summary-value {
+  display: block;
+  overflow-wrap: anywhere;
+  color: #0f172a;
+  font-size: clamp(1.35rem, 2.8vw, 2rem);
+  font-weight: 800;
+  line-height: 1.15;
+}
+
 .register-card-glow-top {
   top: -40px;
   right: -40px;
@@ -2510,8 +2576,22 @@ a {
     padding: 28px 20px;
   }
 
+  .result-card-content {
+    padding: 28px 20px;
+    gap: 18px;
+  }
+
+  .result-summary-card {
+    padding: 16px;
+  }
+
   .login-page-main {
     padding: 16px;
+  }
+
+  .result-page-main {
+    padding-top: 88px;
+    padding-bottom: 24px;
   }
 
   .login-page-footer-content {

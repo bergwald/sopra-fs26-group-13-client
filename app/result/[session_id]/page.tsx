@@ -143,12 +143,12 @@ const ResultPage: React.FC = () => {
         <div className="login-page-nav-divider" />
       </nav>
 
-      <main className="login-page-main">
-        <div className="login-card">
+      <main className="login-page-main result-page-main">
+        <div className="login-card result-card">
           <div className="login-card-glow login-card-glow-top" />
           <div className="login-card-glow login-card-glow-bottom" />
 
-          <div className="login-card-content">
+          <div className="login-card-content result-card-content">
             <p className="login-subtitle">
               {isFinished ? "Single-player run completed" : "Round submitted"}
             </p>
@@ -156,22 +156,22 @@ const ResultPage: React.FC = () => {
               {isFinished ? "Final Results" : `Round ${completedRoundNumber} Results`}
             </h2>
 
-            <div className="game-top-bar" aria-label="Round result summary">
-              <div className="game-metric-card">
-                <span className="game-metric-label">Distance</span>
-                <strong className="game-metric-value">
+            <div className="result-summary-grid" aria-label="Round result summary">
+              <div className="result-summary-card">
+                <span className="result-summary-label">Distance</span>
+                <strong className="result-summary-value">
                   {roundResult ? `${roundResult.distance.toFixed(2)} km` : "Unavailable"}
                 </strong>
               </div>
-              <div className="game-metric-card">
-                <span className="game-metric-label">Round Score</span>
-                <strong className="game-metric-value">
+              <div className="result-summary-card">
+                <span className="result-summary-label">Round Score</span>
+                <strong className="result-summary-value">
                   {roundResult ? roundResult.scoreRound : "Unavailable"}
                 </strong>
               </div>
-              <div className="game-metric-card">
-                <span className="game-metric-label">Total Score</span>
-                <strong className="game-metric-value">{displayScoreOverall}</strong>
+              <div className="result-summary-card">
+                <span className="result-summary-label">Total Score</span>
+                <strong className="result-summary-value">{displayScoreOverall}</strong>
               </div>
             </div>
 
