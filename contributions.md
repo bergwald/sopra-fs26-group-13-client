@@ -87,7 +87,7 @@ reason).
 | ------------------ | -------- | ------------------ | ------------------------------- | ----------------------------------- |
 | **plaiimade** |  15.04.26  | [Commit 056a2a5](https://github.com/bergwald/sopra-fs26-group-13-client/commit/056a2a5d38b8770bbfdfab05297f38037d668eb0) | Added gamepage HTML and CSS | Added game page so others can start implementing game features and include them in the site (e.g. the map and streetview picutes) |
 |                    | 17.04.26   | [Commit 2b10cea](https://github.com/bergwald/sopra-fs26-group-13-client/commit/2b10cea53b9405cbbc89989d50be87e769c8bc7b) | Added homepage HTML and CSS | Layed foundation for our homepage, with a few API tweaks and default removals, the homepage can quickly be completed |
-| **[@githubUser2]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+| **@PAKaeser** | 21.04.26   | [Commit c4d0c46](https://github.com/bergwald/sopra-fs26-group-13-client/commit/c4d0c4623e2e9bada06a4ce5376dedd5a31b579c) | Added the map to make guesses, using leaflet from OpenStreetMap | Allows User to make a guess, saves location coordinates to later send to backend. |
 |                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | **[@githubUser3]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
 |                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
