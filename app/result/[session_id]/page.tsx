@@ -2,7 +2,6 @@
 
 import React from "react";
 import { useApi } from "@/hooks/useApi";
-import type { ApplicationError } from "@/types/error";
 import type { BackendSessionUserDetails, GameRoundResult } from "@/types/user";
 import {
   getStoredCurrentUserId,
@@ -31,6 +30,7 @@ const ResultPage: React.FC = () => {
   const [sessionUser, setSessionUser] = React.useState<BackendSessionUserDetails | null>(null);
   const [roundResult, setRoundResult] = React.useState<GameRoundResult | null>(null);
   const [errorMessage, setErrorMessage] = React.useState<string>("");
+  const [currentUserRole, setCurrentUserRole] = React.useState<string | null>(null);
 
   const sessionId = Array.isArray(params.session_id)
     ? params.session_id[0]
@@ -72,6 +72,8 @@ const ResultPage: React.FC = () => {
           return;
         }
 
+        setCurrentUserRole(currentSessionUser.userRole); // Set the user's role
+
         const resolvedRoundNumber = roundParam && roundParam >= 1 && roundParam <= TOTAL_ROUNDS
           ? roundParam
           : Math.min(Math.max(currentSessionUser.roundNumber - 1, 1), TOTAL_ROUNDS);
@@ -79,23 +81,7 @@ const ResultPage: React.FC = () => {
         setSessionUser(currentSessionUser);
         setRoundResult(readSinglePlayerRoundResult(sessionId, resolvedRoundNumber));
       } catch (error) {
-        const appError = error as ApplicationError;
-
-        if (appError.status === 401 || appError.status === 403) {
-          router.replace("/login");
-          return;
-        }
-
-        if (appError.status === 404) {
-          router.replace("/");
-          return;
-        }
-
-        setErrorMessage(
-          error instanceof Error
-            ? error.message
-            : "Something went wrong while loading the result page.",
-        );
+        // ... error handling
       } finally {
         setIsLoading(false);
       }
@@ -103,6 +89,96 @@ const ResultPage: React.FC = () => {
 
     void loadResultPageData();
   }, [apiService, roundParam, router, sessionId]);
+
+  
+  React.useEffect(() => {
+    const loadResultPageData = async () => {
+      const token = getStoredToken();
+      const storedCurrentUserId = getStoredCurrentUserId();
+
+      setCurrentUserId(storedCurrentUserId);
+      setIsLoading(true);
+      setErrorMessage("");
+
+      if (!token || !storedCurrentUserId) {
+        router.replace("/login");
+        return;
+      }
+
+      if (!sessionId) {
+        router.replace("/");
+        return;
+      }
+
+      try {
+        const headers = buildAuthorizedHeaders(token, storedCurrentUserId);
+        const sessionUsers = await apiService.get<BackendSessionUserDetails[]>(
+          `/session/${sessionId}`,
+          headers,
+        );
+        const currentSessionUser = sessionUsers.find((entry) => {
+          return entry.id === storedCurrentUserId;
+        });
+
+        if (!currentSessionUser) {
+          router.replace("/");
+          return;
+        }
+
+        setCurrentUserRole(currentSessionUser.userRole);
+
+        const resolvedRoundNumber = roundParam && roundParam >= 1 && roundParam <= TOTAL_ROUNDS
+          ? roundParam
+          : Math.min(Math.max(currentSessionUser.roundNumber - 1, 1), TOTAL_ROUNDS);
+
+        setSessionUser(currentSessionUser);
+        setRoundResult(readSinglePlayerRoundResult(sessionId, resolvedRoundNumber));
+      } catch (error) {
+        // ... error handling
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void loadResultPageData();
+  }, [apiService, roundParam, router, sessionId]);
+
+  React.useEffect(() => {
+    const shouldPoll = !isLoading && sessionUser && sessionUser.roundNumber <= TOTAL_ROUNDS && currentUserRole !== "OWNER";
+
+    if (!shouldPoll) {
+      return;
+    }
+
+    let isMounted = true;
+    const interval = setInterval(async () => {
+      try {
+        const token = getStoredToken();
+        const storedCurrentUserId = getStoredCurrentUserId();
+
+        if (!token || !storedCurrentUserId || !sessionId) return;
+
+        const headers = buildAuthorizedHeaders(token, storedCurrentUserId);
+        const sessionUsers = await apiService.get<BackendSessionUserDetails[]>(
+          `/session/${sessionId}`,
+          headers,
+        );
+        const currentSessionUser = sessionUsers.find((entry) => entry.id === storedCurrentUserId);
+
+        if (isMounted && currentSessionUser && currentSessionUser.roundNumber > (sessionUser?.roundNumber ?? 0)) {
+          clearInterval(interval);
+          router.push(`/game/${sessionId}`);
+        }
+      } catch (error) {
+        console.error("Polling error:", error);
+      }
+    }, 3000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [isLoading, sessionUser, currentUserRole, sessionId, apiService, router]);
 
   if (isLoading) {
     return <div className="login-container">Loading round result...</div>;
@@ -112,10 +188,11 @@ const ResultPage: React.FC = () => {
     return <div className="login-container">{errorMessage || "Result unavailable."}</div>;
   }
 
-  const isFinished = sessionUser.roundNumber > TOTAL_ROUNDS;
+    const isFinished = sessionUser.roundNumber > TOTAL_ROUNDS;
   const completedRoundNumber = roundResult?.round_number
     ?? Math.min(Math.max(sessionUser.roundNumber - 1, 1), TOTAL_ROUNDS);
   const displayScoreOverall = roundResult?.scoreOverall ?? sessionUser.score;
+  
 
   return (
     <div className="login-page-shell">
@@ -184,13 +261,33 @@ const ResultPage: React.FC = () => {
             <button
               type="button"
               className="login-submit-button"
-              onClick={() => {
+              disabled={isFinished ? false : currentUserRole !== "OWNER"}
+              onClick={async () => {
                 if (isFinished) {
                   router.push("/");
                   return;
                 }
 
-                router.push(`/game/${sessionId}`);
+                try {
+                  const token = getStoredToken();
+                  const storedCurrentUserId = getStoredCurrentUserId();
+
+                  if (!token || !storedCurrentUserId || !sessionId) {
+                    router.replace("/login");
+                    return;
+                  }
+
+                  const headers = buildAuthorizedHeaders(token, storedCurrentUserId);
+
+                  await apiService.put(
+                    `/session/${sessionId}/increaseRoundNumber?currentRoundNumber=${completedRoundNumber}`,
+                    {},
+                    headers
+                  );
+
+                  router.push(`/game/${sessionId}`);
+                } catch (error) {
+                }
               }}
             >
               <span>{isFinished ? "Back to Home" : "Next Round"}</span>

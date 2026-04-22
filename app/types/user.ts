@@ -44,6 +44,7 @@ export interface SessionUser {
 export interface GameSession {
   session_id: string;
   expiry_date: string;
+  round_started: string;
   round_number: number;
   total_rounds: number;
   mode: "singleplayer" | "multiplayer";
@@ -76,6 +77,7 @@ export interface BackendSessionUserDetails {
   id: number;
   sessionId: string;
   sessionExpiryDateTime: string;
+  roundStartedDateTime: string;
   roundNumber: number;
   score: number;
   userRole: "OWNER" | "PLAYER";

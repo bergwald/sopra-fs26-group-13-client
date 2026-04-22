@@ -32,6 +32,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 
 const TOTAL_ROUNDS = 3;
+const ROUND_LENGTH_SECONDS = 20_000;
 
 const MASCOT_IMAGES: Record<number, string> = {
   1: "/mascots/earth-sunglasses.svg",
@@ -43,6 +44,7 @@ const MASCOT_IMAGES: Record<number, string> = {
 const DEFAULT_SESSION: GameSession = {
   session_id: "sample-session",
   expiry_date: new Date(Date.now() + 1000 * 60 * 2 + 1000 * 17).toISOString(),
+  round_started: new Date(Date.now() + 1000 * 60 * 2 + 1000 * 17).toISOString(),
   round_number: 1,
   total_rounds: TOTAL_ROUNDS,
   mode: "singleplayer",
@@ -78,6 +80,7 @@ const buildAuthorizedHeaders = (token: string, userId: number): HeadersInit => {
   };
 };
 
+
 const mapSessionDetailsToGameSession = (
   sessionUser: BackendSessionUserDetails,
 ): GameSession => {
@@ -85,6 +88,7 @@ const mapSessionDetailsToGameSession = (
     session_id: sessionUser.sessionId,
     expiry_date: sessionUser.sessionExpiryDateTime,
     round_number: sessionUser.roundNumber === 0 ? 1 : sessionUser.roundNumber,
+    round_started: sessionUser.roundStartedDateTime,
     total_rounds: TOTAL_ROUNDS,
     mode: "singleplayer",
   };
@@ -106,6 +110,7 @@ const mapBackendGameDataToGameData = (
 };
 
 const GameLeafletMap = dynamic(() => import("./GameLeafletMap"), { ssr: false });
+
 
 const GamePage: React.FC = () => {
   const router = useRouter();
@@ -135,6 +140,7 @@ const GamePage: React.FC = () => {
   const navProfileImage = currentMascotId
     ? MASCOT_IMAGES[currentMascotId] ?? MASCOT_IMAGES[1]
     : null;
+
 
   const loadGamePageData = React.useCallback(async () => {
     const token = getStoredToken();
@@ -181,7 +187,7 @@ const GamePage: React.FC = () => {
         `/game_data?sessionId=${encodeURIComponent(sessionId)}&roundNumber=${currentSessionUser.roundNumber}`,
         headers,
       );
-
+      console.log("Mapped session: ", mappedSession);
       setSession(mappedSession);
       setGameData(mapBackendGameDataToGameData(backendGameData, mappedSession));
       setSelectedGuess(null);
@@ -226,17 +232,31 @@ const GamePage: React.FC = () => {
       document.body.style.overflow = previousBodyOverflow;
     };
   }, []);
+  const [roundTimeLeft, setRoundTimeLeft] = React.useState<string>(
+    formatTimeLeft(new Date(new Date(session.round_started!).getTime() + ROUND_LENGTH_SECONDS).toISOString())
+  );
 
   React.useEffect(() => {
-    setTimeLeft(formatTimeLeft(session.expiry_date));
+    if (!session.round_started) return;
 
+    const roundExpiryDate = new Date(session.round_started).getTime() + ROUND_LENGTH_SECONDS;
     const timer = globalThis.setInterval(() => {
-      setTimeLeft(formatTimeLeft(session.expiry_date));
-    }, 1000);
+      const now = Date.now();
+      const millisecondsLeft = roundExpiryDate - now;
+
+      if (millisecondsLeft <= 0) {
+        console.log("Timeout reached!");
+        setRoundTimeLeft("00:00");
+        globalThis.clearInterval(timer);
+        void handleSubmitGuess();
+        //router.push(`/result/${session.session_id}?round=${session.round_number}`);
+      } else {
+        setRoundTimeLeft(formatTimeLeft(new Date(roundExpiryDate).toISOString()));
+      }
+    }, 1000); // Update every 1 second
 
     return () => globalThis.clearInterval(timer);
-  }, [session.expiry_date]);
-
+  }, [session.round_started]);
   React.useEffect(() => {
     if (leafletMapRef.current) {
       globalThis.setTimeout(() => leafletMapRef.current?.invalidateSize(), 200);
@@ -250,8 +270,9 @@ const GamePage: React.FC = () => {
 
   const handleSubmitGuess = async () => {
     const token = getStoredToken();
+      console.log("We want to submit!")
 
-    if (!selectedGuess || !currentUserId || !token) {
+    if (!currentUserId || !token) {
       return;
     }
 
@@ -259,10 +280,11 @@ const GamePage: React.FC = () => {
       user_id: currentUserId,
       session_id: session.session_id,
       round_number: session.round_number,
-      latitude: selectedGuess.latitude,
-      longitude: selectedGuess.longitude,
-    };
+      latitude: selectedGuess?.latitude ?? -1.0,
+      longitude: selectedGuess?.longitude ?? -1.0, // Setting them to default -1.0 in case the time ran out or other issues happened.
 
+    };
+    console.log("Guess payload: ", guessPayload);
     try {
       setHasSubmittedGuess(true);
 
@@ -282,7 +304,7 @@ const GamePage: React.FC = () => {
         round_number: session.round_number,
         ...roundResultResponse,
       };
-
+      console.log("Saving and moving forward");
       storeSinglePlayerRoundResult(session.session_id, roundResult);
       router.push(`/result/${session.session_id}?round=${session.round_number}`);
     } catch (error) {
@@ -315,6 +337,7 @@ const GamePage: React.FC = () => {
     );
   }
 
+
   const roundLabel = `${session.round_number}/${session.total_rounds}`;
 
   return (
@@ -336,6 +359,12 @@ const GamePage: React.FC = () => {
             <Clock3 className="game-page-status-icon" />
             <span>Session Timer</span>
             <strong>{timeLeft}</strong>
+          </div>
+          <div className="game-page-status-pill">
+            <Clock3 className="game-page-status-icon" />
+            <span>Round Timer</span>
+            <strong>{formatTimeLeft(new Date(new Date(session.round_started!).getTime() + ROUND_LENGTH_SECONDS).toISOString())}</strong>
+
           </div>
         </div>
 

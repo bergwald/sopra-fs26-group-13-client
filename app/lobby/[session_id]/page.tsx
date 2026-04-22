@@ -39,7 +39,7 @@ const LobbyPage: React.FC = () => {
     let cancelled = false;
     let intervalId: ReturnType<typeof setTimeout> | null = null;
     let backoffMs = 2000;
-    const POLL_INTERVAL = 5000;
+    const POLL_INTERVAL = 2000;
 
     const fetchSessionData = async () => {
       try {
@@ -53,7 +53,6 @@ const LobbyPage: React.FC = () => {
 
         const headers = buildAuthorizedHeaders(token, storedCurrentUserId);
         const response = await api.get<Record<string, any>[]>(`/session/${sessionId}`, headers);
-
         // Starts the game for all if the owner starts
         const owner = response.find((user) => user.userRole === "OWNER");
         if (owner && owner.roundNumber > 0) {
@@ -95,6 +94,12 @@ const LobbyPage: React.FC = () => {
         router.replace("/");
         return;
       }
+      const headers = buildAuthorizedHeaders(token, storedCurrentUserId);
+      await api.put(
+        `/session/${sessionId}/increaseRoundNumber?currentRoundNumber=0`,
+        {},
+        headers
+      );
       router.push(`/game/${sessionId}`);
     } catch (err) {
       console.error("Failed to start game:", err);
@@ -142,40 +147,40 @@ const LobbyPage: React.FC = () => {
       </nav>
 
       <main className="game-page-main">
-            <section className="lobby-users-panel" aria-label="Users in session">
-              <h2 className="text-xl font-semibold mb-4">Users in Session</h2>
-              <div className="overflow-x-auto">
-                <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow">
-                  <thead>
-                    <tr className="bg-gray-100">
-                      <th className="py-2 px-4 border-b">
-                        <UserCircle className="h-5 w-5 inline-block mr-1" />
-                        User ID
-                      </th>
-                      <th className="py-2 px-4 border-b">Role</th>
-                      <th className="py-2 px-4 border-b">Score</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sessionUsers.map((user) => (
-                      <tr key={user.id} className="hover:bg-gray-50">
-                        <td className="py-2 px-4 border-b">{user.id}</td>
-                        <td className="py-2 px-4 border-b">{user.userRole}</td>
-                        <td className="py-2 px-4 border-b">{user.score}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+        <section className="lobby-users-panel" aria-label="Users in session">
+          <h2 className="text-xl font-semibold mb-4">Users in Session</h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="py-2 px-4 border-b">
+                    <UserCircle className="h-5 w-5 inline-block mr-1" />
+                    User ID
+                  </th>
+                  <th className="py-2 px-4 border-b">Role</th>
+                  <th className="py-2 px-4 border-b">Score</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sessionUsers.map((user) => (
+                  <tr key={user.id} className="hover:bg-gray-50">
+                    <td className="py-2 px-4 border-b">{user.id}</td>
+                    <td className="py-2 px-4 border-b">{user.userRole}</td>
+                    <td className="py-2 px-4 border-b">{user.score}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-              {isOwner && (
-                <button
-                  onClick={handleStartGame}
-  className="mt-6 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition pointer-events-auto">
-                  Start Game
-                </button>
-              )}
-            </section>
+          {isOwner && (
+            <button
+              onClick={handleStartGame}
+              className="mt-6 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition pointer-events-auto">
+              Start Game
+            </button>
+          )}
+        </section>
 
       </main>
     </div>
