@@ -3,17 +3,20 @@
 import React from "react";
 import { useApi } from "@/hooks/useApi";
 import type { ApplicationError } from "@/types/error";
+import type { LeafletMapLike } from "./ResultLeafletMap";
+import "leaflet/dist/leaflet.css";
 import type { BackendSessionUserDetails, GameRoundResult } from "@/types/user";
 import {
   getStoredCurrentUserId,
   getStoredToken,
 } from "@/utils/auth";
+import dynamic from "next/dynamic";
 import { readSinglePlayerRoundResult } from "@/utils/singleplayerResult";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 const TOTAL_ROUNDS = 3;
-
+ 
 const buildAuthorizedHeaders = (token: string, userId: number): HeadersInit => {
   return {
     Authorization: `Bearer ${token}`,
@@ -21,17 +24,24 @@ const buildAuthorizedHeaders = (token: string, userId: number): HeadersInit => {
   };
 };
 
+const ResultLeafletMap = dynamic(() => import("./ResultLeafletMap"), { ssr: false });
+
 const ResultPage: React.FC = () => {
   const apiService = useApi();
   const router = useRouter();
   const params = useParams<{ session_id: string }>();
   const searchParams = useSearchParams();
+  const leafletMapRef = React.useRef<LeafletMapLike | null>(null);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [currentUserId, setCurrentUserId] = React.useState<number | null>(null);
   const [sessionUser, setSessionUser] = React.useState<BackendSessionUserDetails | null>(null);
   const [roundResult, setRoundResult] = React.useState<GameRoundResult | null>(null);
   const [errorMessage, setErrorMessage] = React.useState<string>("");
 
+  const worldBounds = React.useMemo<[[number, number], [number, number]]>(
+    () => [[-60, -180], [85, 180]],
+    [],
+  );
   const sessionId = Array.isArray(params.session_id)
     ? params.session_id[0]
     : params.session_id;
@@ -111,7 +121,6 @@ const ResultPage: React.FC = () => {
   if (!sessionUser) {
     return <div className="login-container">{errorMessage || "Result unavailable."}</div>;
   }
-
   const isFinished = sessionUser.roundNumber > TOTAL_ROUNDS;
   const completedRoundNumber = roundResult?.round_number
     ?? Math.min(Math.max(sessionUser.roundNumber - 1, 1), TOTAL_ROUNDS);
@@ -155,7 +164,13 @@ const ResultPage: React.FC = () => {
             <h2 className="login-title">
               {isFinished ? "Final Results" : `Round ${completedRoundNumber} Results`}
             </h2>
-
+            <ResultLeafletMap
+                  worldBounds={worldBounds}
+                  correctCoordinates={[roundResult?.latitude ?? -88, roundResult?.longitude ?? 180]}
+                  onMapReady={(mapInstance) => {
+                    leafletMapRef.current = mapInstance;
+                  }}
+                />
             <div className="result-summary-grid" aria-label="Round result summary">
               <div className="result-summary-card">
                 <span className="result-summary-label">Distance</span>

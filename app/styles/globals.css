@@ -2248,6 +2248,10 @@ a {
   backdrop-filter: blur(20px);
 }
 
+.result-osm-root {
+  height: 400px;
+  width: 100%;
+}
 .register-card {
   position: relative;
   width: 100%;
