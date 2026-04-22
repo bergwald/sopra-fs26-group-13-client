@@ -32,7 +32,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 
 const TOTAL_ROUNDS = 3;
-const ROUND_LENGTH_SECONDS = 20_000;
+const ROUND_LENGTH_SECONDS = 30_000;
 
 const MASCOT_IMAGES: Record<number, string> = {
   1: "/mascots/earth-sunglasses.svg",
@@ -72,6 +72,18 @@ const formatTimeLeft = (expiryDate: string): string => {
   const seconds = (totalSeconds % 60).toString().padStart(2, "0");
   return `${minutes}:${seconds}`;
 };
+
+const formatTimeLeftMilliseconds = (millisecondsLeft: number): string => {
+  if (millisecondsLeft <= 0) {
+    return "00:00";
+  }
+
+  const totalSeconds = Math.floor(millisecondsLeft / 1000);
+  const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, "0");
+  const seconds = (totalSeconds % 60).toString().padStart(2, "0");
+  return `${minutes}:${seconds}`;
+};
+
 
 const buildAuthorizedHeaders = (token: string, userId: number): HeadersInit => {
   return {
@@ -249,7 +261,6 @@ const GamePage: React.FC = () => {
 
   const handleSubmitGuess = async () => {
     const token = getStoredToken();
-      console.log("We want to submit!")
 
     if (!currentUserId || !token) {
       return;
@@ -311,23 +322,29 @@ const GamePage: React.FC = () => {
   React.useEffect(() => {
     if (!session.round_started) return;
 
-    const roundExpiryDate = new Date(session.round_started).getTime() + ROUND_LENGTH_SECONDS;
+    // Calculate server time offset (only once)
+    const serverTime = new Date(session.round_started).getTime();
+    const clientTime = Date.now();
+    const timeOffset = serverTime - clientTime; // Server time - Client time
+
+    const roundExpiryDate = serverTime + ROUND_LENGTH_SECONDS;
+
     const timer = globalThis.setInterval(() => {
-      const now = Date.now();
-      const millisecondsLeft = roundExpiryDate - now;
+      // Use adjusted "now" that accounts for server timezone
+      const adjustedNow = Date.now() + timeOffset;
+      const millisecondsLeft = roundExpiryDate - adjustedNow;
 
       if (millisecondsLeft <= 0) {
         console.log("Timeout reached!");
         setRoundTimeLeft("00:00");
         globalThis.clearInterval(timer);
         void handleSubmitGuess();
-        //router.push(`/result/${session.session_id}?round=${session.round_number}`);
       } else {
-        setRoundTimeLeft(formatTimeLeft(new Date(roundExpiryDate).toISOString()));
+        setRoundTimeLeft(formatTimeLeftMilliseconds(millisecondsLeft));
       }
-    }, 1000); // Update every 1 second
+    }, 1000);
 
-    return () => globalThis.clearInterval(timer);
+    return () => globalThis.clearInterval(timer); // Cleanup
   }, [session.round_started]);
 
   if (isLoading || !isAuthorized) {
