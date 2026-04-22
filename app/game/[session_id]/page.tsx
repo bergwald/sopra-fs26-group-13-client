@@ -84,7 +84,7 @@ const mapSessionDetailsToGameSession = (
   return {
     session_id: sessionUser.sessionId,
     expiry_date: sessionUser.sessionExpiryDateTime,
-    round_number: sessionUser.roundNumber,
+    round_number: sessionUser.roundNumber === 0 ? 1 : sessionUser.roundNumber,
     total_rounds: TOTAL_ROUNDS,
     mode: "singleplayer",
   };
