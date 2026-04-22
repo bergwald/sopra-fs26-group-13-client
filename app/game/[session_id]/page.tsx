@@ -414,11 +414,7 @@ const GamePage: React.FC = () => {
               className={`game-map-panel ${mapExpanded ? "game-map-panel-expanded" : ""}`}
               aria-label="Guess map"
             >
-              <div className="game-map-header">
-                <div>
-                  <p className="game-map-header-eyebrow">Guess Map</p>
-                  <h2 className="game-map-header-title">OpenStreetMap</h2>
-                </div>
+              <div className="game-map-body">
                 <button
                   type="button"
                   className="game-map-toggle"
@@ -431,9 +427,7 @@ const GamePage: React.FC = () => {
                     <Expand className="game-map-toggle-icon" />
                   )}
                 </button>
-              </div>
 
-              <div className="game-map-body">
                 <GameLeafletMap
                   worldBounds={worldBounds}
                   selectedGuess={selectedGuess}
