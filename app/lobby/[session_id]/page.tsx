@@ -54,6 +54,12 @@ const LobbyPage: React.FC = () => {
         const headers = buildAuthorizedHeaders(token, storedCurrentUserId);
         const response = await api.get<Record<string, any>[]>(`/session/${sessionId}`, headers);
 
+        // Starts the game for all if the owner starts
+        const owner = response.find((user) => user.userRole === "OWNER");
+        if (owner && owner.roundNumber > 0) {
+          router.push(`/game/${sessionId}`);
+        }
+
         if (cancelled) return;
 
         setSessionUsers(response);
