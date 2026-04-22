@@ -130,7 +130,7 @@ const ResultPage: React.FC = () => {
       } catch (error) {
         console.error("Polling error:", error);
       }
-    }, 3000);
+    }, 1500); // polling every 1.5 seconds
 
     return () => {
       isMounted = false;

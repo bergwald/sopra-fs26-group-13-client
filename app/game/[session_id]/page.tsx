@@ -124,7 +124,7 @@ const GamePage: React.FC = () => {
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [mapExpanded, setMapExpanded] = React.useState<boolean>(false);
   const [hasSubmittedGuess, setHasSubmittedGuess] = React.useState<boolean>(false);
-  const [timeLeft, setTimeLeft] = React.useState<string>(
+  const [timeLeft] = React.useState<string>(
     formatTimeLeft(DEFAULT_SESSION.expiry_date),
   );
   const [errorMessage, setErrorMessage] = React.useState<string>("");
@@ -237,27 +237,6 @@ const GamePage: React.FC = () => {
   );
 
   React.useEffect(() => {
-    if (!session.round_started) return;
-
-    const roundExpiryDate = new Date(session.round_started).getTime() + ROUND_LENGTH_SECONDS;
-    const timer = globalThis.setInterval(() => {
-      const now = Date.now();
-      const millisecondsLeft = roundExpiryDate - now;
-
-      if (millisecondsLeft <= 0) {
-        console.log("Timeout reached!");
-        setRoundTimeLeft("00:00");
-        globalThis.clearInterval(timer);
-        void handleSubmitGuess();
-        //router.push(`/result/${session.session_id}?round=${session.round_number}`);
-      } else {
-        setRoundTimeLeft(formatTimeLeft(new Date(roundExpiryDate).toISOString()));
-      }
-    }, 1000); // Update every 1 second
-
-    return () => globalThis.clearInterval(timer);
-  }, [session.round_started]);
-  React.useEffect(() => {
     if (leafletMapRef.current) {
       globalThis.setTimeout(() => leafletMapRef.current?.invalidateSize(), 200);
     }
@@ -328,6 +307,28 @@ const GamePage: React.FC = () => {
       );
     }
   };
+
+  React.useEffect(() => {
+    if (!session.round_started) return;
+
+    const roundExpiryDate = new Date(session.round_started).getTime() + ROUND_LENGTH_SECONDS;
+    const timer = globalThis.setInterval(() => {
+      const now = Date.now();
+      const millisecondsLeft = roundExpiryDate - now;
+
+      if (millisecondsLeft <= 0) {
+        console.log("Timeout reached!");
+        setRoundTimeLeft("00:00");
+        globalThis.clearInterval(timer);
+        void handleSubmitGuess();
+        //router.push(`/result/${session.session_id}?round=${session.round_number}`);
+      } else {
+        setRoundTimeLeft(formatTimeLeft(new Date(roundExpiryDate).toISOString()));
+      }
+    }, 1000); // Update every 1 second
+
+    return () => globalThis.clearInterval(timer);
+  }, [session.round_started]);
 
   if (isLoading || !isAuthorized) {
     return (
