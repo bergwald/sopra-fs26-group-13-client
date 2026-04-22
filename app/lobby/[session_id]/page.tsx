@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-
+import type { BackendSessionUserDetails } from "@/types/user";
 const buildAuthorizedHeaders = (token: string, userId: number): HeadersInit => {
   return {
     Authorization: `Bearer ${token}`,
@@ -24,7 +24,7 @@ const LobbyPage: React.FC = () => {
   const params = useParams();
   const sessionId = params?.session_id as string | undefined;
   const router = useRouter();
-  const [sessionUsers, setSessionUsers] = useState<Record<string, any>[]>([]);
+  const [sessionUsers, setSessionUsers] = useState<BackendSessionUserDetails[]>([]);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +52,7 @@ const LobbyPage: React.FC = () => {
         setCurrentUserId(storedCurrentUserId);
 
         const headers = buildAuthorizedHeaders(token, storedCurrentUserId);
-        const response = await api.get<Record<string, any>[]>(`/session/${sessionId}`, headers);
+        const response = await api.get<BackendSessionUserDetails[]>(`/session/${sessionId}`, headers);
         // Starts the game for all if the owner starts
         const owner = response.find((user) => user.userRole === "OWNER");
         if (owner && owner.roundNumber > 0) {

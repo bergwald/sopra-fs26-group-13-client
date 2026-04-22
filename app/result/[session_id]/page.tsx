@@ -48,58 +48,6 @@ const ResultPage: React.FC = () => {
   const roundParamValue = searchParams.get("round");
   const roundParam = roundParamValue ? Number(roundParamValue) : null;
 
-  React.useEffect(() => {
-    const loadResultPageData = async () => {
-      const token = getStoredToken();
-      const storedCurrentUserId = getStoredCurrentUserId();
-
-      setCurrentUserId(storedCurrentUserId);
-      setIsLoading(true);
-      setErrorMessage("");
-
-      if (!token || !storedCurrentUserId) {
-        router.replace("/login");
-        return;
-      }
-
-      if (!sessionId) {
-        router.replace("/");
-        return;
-      }
-
-      try {
-        const headers = buildAuthorizedHeaders(token, storedCurrentUserId);
-        const sessionUsers = await apiService.get<BackendSessionUserDetails[]>(
-          `/session/${sessionId}`,
-          headers,
-        );
-        const currentSessionUser = sessionUsers.find((entry) => {
-          return entry.id === storedCurrentUserId;
-        });
-
-        if (!currentSessionUser) {
-          router.replace("/");
-          return;
-        }
-
-        setCurrentUserRole(currentSessionUser.userRole); // Set the user's role
-
-        const resolvedRoundNumber = roundParam && roundParam >= 1 && roundParam <= TOTAL_ROUNDS
-          ? roundParam
-          : Math.min(Math.max(currentSessionUser.roundNumber - 1, 1), TOTAL_ROUNDS);
-
-        setSessionUser(currentSessionUser);
-        setRoundResult(readSinglePlayerRoundResult(sessionId, resolvedRoundNumber));
-      } catch (error) {
-        // ... error handling
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    void loadResultPageData();
-  }, [apiService, roundParam, router, sessionId]);
-
   
   React.useEffect(() => {
     const loadResultPageData = async () => {
@@ -144,7 +92,7 @@ const ResultPage: React.FC = () => {
         setSessionUser(currentSessionUser);
         setRoundResult(readSinglePlayerRoundResult(sessionId, resolvedRoundNumber));
       } catch (error) {
-        // ... error handling
+                console.log("Error while showing result page ", error);
       } finally {
         setIsLoading(false);
       }
@@ -182,7 +130,7 @@ const ResultPage: React.FC = () => {
       } catch (error) {
         console.error("Polling error:", error);
       }
-    }, 3000);
+    }, 1500); // polling every 1.5 seconds
 
     return () => {
       isMounted = false;
@@ -303,6 +251,8 @@ const ResultPage: React.FC = () => {
 
                   router.push(`/game/${sessionId}`);
                 } catch (error) {
+                    console.log("Error while navigating from result page ", error);
+
                 }
               }}
             >
