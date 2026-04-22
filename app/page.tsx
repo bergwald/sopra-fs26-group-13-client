@@ -252,6 +252,8 @@ const HomePage: React.FC = () => {
         },
       );
 
+
+
       router.push(`/game/${response.id}`);
     } catch (error) {
       const appError = error as ApplicationError;
@@ -269,10 +271,10 @@ const HomePage: React.FC = () => {
     }
   };
 
-  const handleCreateMultiplayer = () => {
-    try {
-      const demoSessionId = "demo-multiplayer-session";
 
+
+
+  const handleCreateMultiplayer = async() => {
       // Example backend direction:
       // const response = await apiService.post<GameSession>(
       //   "/sessions/multiplayer",
@@ -282,9 +284,38 @@ const HomePage: React.FC = () => {
       //
       // Once the backend creates a room, send players into that lobby.
       // router.push(`/lobby/${response.session_id}`);
+    const token = getStoredToken();
 
-      router.push(`/lobby/${demoSessionId}`);
+    if (!token || !currentUserId) {
+      router.push("/login");
+      return;
+    }
+
+    try {
+      const response = await apiService.post<{
+        id: string;
+        sessionExpiryDateTime: string;
+        roundNumber: number;
+      }>(
+        "/session",
+        { userId: currentUserId },
+        {
+          Authorization: `Bearer ${token}`,
+          userId: String(currentUserId),
+        },
+      );
+
+
+
+      router.push(`/lobby/${response.id}`);
     } catch (error) {
+      const appError = error as ApplicationError;
+
+      if (appError.status === 401 || appError.status === 403) {
+        router.push("/login");
+        return;
+      }
+
       if (error instanceof Error) {
         alert(`Something went wrong while creating a multiplayer session:\n${error.message}`);
       } else {
@@ -293,13 +324,52 @@ const HomePage: React.FC = () => {
     }
   };
 
-  const handleJoinSession = (event: React.FormEvent<HTMLFormElement>) => {
+
+  const handleJoinSession = async(event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const normalizedSessionId = sessionIdInput.trim();
 
     if (!normalizedSessionId) {
       return;
+    }
+        const token = getStoredToken();
+
+    if (!token || !currentUserId) {
+      router.push("/login");
+      return;
+    }
+
+    try {
+      const response = await apiService.put<{
+        id: string;
+        sessionExpiryDateTime: string;
+        roundNumber: number;
+      }>(
+        "/session",
+        { userId: currentUserId, sessionId: normalizedSessionId},
+        {
+          Authorization: `Bearer ${token}`,
+          userId: String(currentUserId),
+        },
+      );
+
+
+
+      router.push(`/lobby/${response.id}`);
+    } catch (error) {
+      const appError = error as ApplicationError;
+
+      if (appError.status === 401 || appError.status === 403) {
+        router.push("/login");
+        return;
+      }
+
+      if (error instanceof Error) {
+        alert(`Something went wrong while creating a multiplayer session:\n${error.message}`);
+      } else {
+        alert("Something went wrong while creating a multiplayer session.");
+      }
     }
 
     try {
