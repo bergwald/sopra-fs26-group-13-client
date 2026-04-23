@@ -6,15 +6,27 @@ import type { LeafletMapLike } from "./ResultLeafletMap";
 import "leaflet/dist/leaflet.css";
 import type { BackendSessionUserDetails, GameRoundResult } from "@/types/user";
 import {
+  getStoredCurrentMascotId,
   getStoredCurrentUserId,
   getStoredToken,
 } from "@/utils/auth";
 import dynamic from "next/dynamic";
 import { readSinglePlayerRoundResult } from "@/utils/singleplayerResult";
+import {
+  ArrowRight,
+  Trophy,
+} from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 const TOTAL_ROUNDS = 3;
+
+const MASCOT_IMAGES: Record<number, string> = {
+  1: "/mascots/earth-sunglasses.svg",
+  2: "/mascots/robot-flower.svg",
+  3: "/mascots/saturn-space.svg",
+  4: "/mascots/smiling-sun.svg",
+};
  
 const buildAuthorizedHeaders = (token: string, userId: number): HeadersInit => {
   return {
@@ -33,6 +45,7 @@ const ResultPage: React.FC = () => {
   const leafletMapRef = React.useRef<LeafletMapLike | null>(null);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [currentUserId, setCurrentUserId] = React.useState<number | null>(null);
+  const [currentMascotId, setCurrentMascotId] = React.useState<number | null>(null);
   const [sessionUser, setSessionUser] = React.useState<BackendSessionUserDetails | null>(null);
   const [roundResult, setRoundResult] = React.useState<GameRoundResult | null>(null);
   const [errorMessage, setErrorMessage] = React.useState<string>("");
@@ -53,8 +66,10 @@ const ResultPage: React.FC = () => {
     const loadResultPageData = async () => {
       const token = getStoredToken();
       const storedCurrentUserId = getStoredCurrentUserId();
+      const storedCurrentMascotId = getStoredCurrentMascotId();
 
       setCurrentUserId(storedCurrentUserId);
+      setCurrentMascotId(storedCurrentMascotId);
       setIsLoading(true);
       setErrorMessage("");
 
@@ -101,8 +116,16 @@ const ResultPage: React.FC = () => {
     void loadResultPageData();
   }, [apiService, roundParam, router, sessionId]);
 
+  const completedRoundNumber = roundResult?.round_number
+    ?? (sessionUser ? Math.min(Math.max(sessionUser.roundNumber - 1, 1), TOTAL_ROUNDS) : 1);
+  const isFinished = completedRoundNumber >= TOTAL_ROUNDS;
+
   React.useEffect(() => {
-    const shouldPoll = !isLoading && sessionUser && sessionUser.roundNumber <= TOTAL_ROUNDS && currentUserRole !== "OWNER";
+    const shouldPoll = !isLoading &&
+      sessionUser &&
+      completedRoundNumber < TOTAL_ROUNDS &&
+      sessionUser.roundNumber <= TOTAL_ROUNDS &&
+      currentUserRole !== "OWNER";
 
     if (!shouldPoll) {
       return;
@@ -136,7 +159,7 @@ const ResultPage: React.FC = () => {
       isMounted = false;
       clearInterval(interval);
     };
-  }, [isLoading, sessionUser, currentUserRole, sessionId, apiService, router]);
+  }, [isLoading, sessionUser, currentUserRole, sessionId, apiService, router, completedRoundNumber]);
 
   if (isLoading) {
     return <div className="login-container">Loading round result...</div>;
@@ -146,17 +169,18 @@ const ResultPage: React.FC = () => {
     return <div className="login-container">{errorMessage || "Result unavailable."}</div>;
   }
 
-    const isFinished = sessionUser.roundNumber > TOTAL_ROUNDS;
-  const completedRoundNumber = roundResult?.round_number
-    ?? Math.min(Math.max(sessionUser.roundNumber - 1, 1), TOTAL_ROUNDS);
   const displayScoreOverall = roundResult?.scoreOverall ?? sessionUser.score;
+  const navMascotImage = MASCOT_IMAGES[currentMascotId ?? 1] ?? MASCOT_IMAGES[1];
   
 
   return (
-    <div className="login-page-shell">
+    <div className="result-page-root">
       <div className="login-page-background" />
+      <div className="result-page-aurora" />
+      <div className="result-page-glow result-page-glow-left" />
+      <div className="result-page-glow result-page-glow-right" />
 
-      <nav className="login-page-nav">
+      <nav className="login-page-nav profile-page-nav">
         <div className="login-page-nav-left">
           <Link href="/" className="login-page-brand">
             <div className="login-page-brand-icon" aria-hidden="true">
@@ -168,63 +192,88 @@ const ResultPage: React.FC = () => {
 
         <div className="login-page-nav-right">
           <Link
-            href={currentUserId ? `/users/${currentUserId}` : "/"}
-            className="login-page-close-button"
-            aria-label="Open your profile"
+            href={currentUserId ? `/users/${currentUserId}` : "/login"}
+            className="profile-nav-avatar-link"
+            aria-label={currentUserId ? "Open your profile" : "Open login page"}
           >
-            Profile
+            <img
+              src={navMascotImage}
+              alt="Profile mascot"
+              className="profile-nav-avatar-image"
+            />
           </Link>
         </div>
         <div className="login-page-nav-divider" />
       </nav>
 
-      <main className="login-page-main result-page-main">
-        <div className="login-card result-card">
-          <div className="login-card-glow login-card-glow-top" />
-          <div className="login-card-glow login-card-glow-bottom" />
+      <main className="result-page-shell">
+        <section className="result-hero-card">
+          <div className="result-hero-top-glow" />
 
-          <div className="login-card-content result-card-content">
-            <p className="login-subtitle">
-              {isFinished ? "Single-player run completed" : "Round submitted"}
-            </p>
-            <h2 className="login-title">
+          <div className="result-hero-copy">
+            <h1 className="result-hero-title result-hero-title-inline">
+              <span className="result-trophy-inline-wrap">
+                <span className="result-trophy-inline-ring" />
+                <span className="result-trophy-inline-core">
+                  <Trophy className="result-trophy-inline-icon" />
+                </span>
+              </span>
               {isFinished ? "Final Results" : `Round ${completedRoundNumber} Results`}
-            </h2>
-            <ResultLeafletMap
-                  worldBounds={worldBounds}
-                  correctCoordinates={[roundResult?.latitude ?? -88, roundResult?.longitude ?? 180]}
-                  onMapReady={(mapInstance) => {
-                    leafletMapRef.current = mapInstance;
-                  }}
-                />
-            <div className="result-summary-grid" aria-label="Round result summary">
-              <div className="result-summary-card">
-                <span className="result-summary-label">Distance</span>
-                <strong className="result-summary-value">
-                  {roundResult ? `${roundResult.distance.toFixed(2)} km` : "Unavailable"}
+            </h1>
+          </div>
+
+          <div className="result-map-card">
+            <div className="result-map-frame">
+              <ResultLeafletMap
+                worldBounds={worldBounds}
+                correctCoordinates={[roundResult?.latitude ?? -88, roundResult?.longitude ?? 180]}
+                onMapReady={(mapInstance) => {
+                  leafletMapRef.current = mapInstance;
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="result-stat-grid" aria-label="Round result summary">
+            <div className="result-stat-card result-stat-card-distance">
+              <span className="result-stat-label">Distance</span>
+              <div className="result-stat-row">
+                <strong className="result-stat-value">
+                  {roundResult ? roundResult.distance.toFixed(2) : "Unavailable"}
                 </strong>
-              </div>
-              <div className="result-summary-card">
-                <span className="result-summary-label">Round Score</span>
-                <strong className="result-summary-value">
-                  {roundResult ? roundResult.scoreRound : "Unavailable"}
-                </strong>
-              </div>
-              <div className="result-summary-card">
-                <span className="result-summary-label">Total Score</span>
-                <strong className="result-summary-value">{displayScoreOverall}</strong>
+                {roundResult ? <span className="result-stat-unit">km</span> : null}
               </div>
             </div>
 
-            <p className="login-subtitle">
-              {isFinished
-                ? "All three rounds are complete. You can return to the homepage or review your profile."
-                : "Continue to the next round when you are ready."}
-            </p>
+            <div className="result-stat-card result-stat-card-round">
+              <span className="result-stat-label">Round Points</span>
+              <div className="result-stat-row">
+                <strong className="result-stat-value result-stat-value-round">
+                  {roundResult ? `+${roundResult.scoreRound}` : "Unavailable"}
+                </strong>
+                {roundResult ? <span className="result-stat-unit">pts</span> : null}
+              </div>
+            </div>
 
+            <div className="result-stat-card result-stat-card-total">
+              <span className="result-stat-label">Total Points</span>
+              <div className="result-stat-row">
+                <strong className="result-stat-value result-stat-value-total">{displayScoreOverall}</strong>
+                <span className="result-stat-unit">pts</span>
+              </div>
+            </div>
+          </div>
+
+          <p className="result-hero-description">
+            {isFinished
+              ? "All three rounds are complete. You can return to the homepage or review your profile."
+              : "Continue to the next round when you are ready."}
+          </p>
+
+          <div className="result-action-row">
             <button
               type="button"
-              className="login-submit-button"
+              className="result-next-button"
               disabled={isFinished ? false : currentUserRole !== "OWNER"}
               onClick={async () => {
                 if (isFinished) {
@@ -246,26 +295,31 @@ const ResultPage: React.FC = () => {
                   await apiService.put(
                     `/session/${sessionId}/increaseRoundNumber?currentRoundNumber=${completedRoundNumber}`,
                     {},
-                    headers
+                    headers,
                   );
 
                   router.push(`/game/${sessionId}`);
                 } catch (error) {
-                    console.log("Error while navigating from result page ", error);
-
+                  console.log("Error while navigating from result page ", error);
                 }
               }}
             >
               <span>{isFinished ? "Back to Home" : "Next Round"}</span>
-              <span className="login-submit-arrow" aria-hidden="true">→</span>
+              <ArrowRight className="result-action-icon result-action-icon-next" />
             </button>
-
-            {errorMessage ? (
-              <p className="login-register-text">{errorMessage}</p>
-            ) : null}
           </div>
-        </div>
+
+          {errorMessage ? (
+            <p className="result-feedback-text">{errorMessage}</p>
+          ) : null}
+        </section>
       </main>
+
+      <footer className="login-page-footer profile-page-footer">
+        <div className="login-page-footer-content">
+          <div className="login-page-footer-text">&copy; 2026 SoPra Group 13</div>
+        </div>
+      </footer>
     </div>
   );
 };
