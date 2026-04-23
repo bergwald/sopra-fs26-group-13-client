@@ -100,8 +100,8 @@ reason).
 
 | **Student**        | **Date** | **Link to Commit** | **Description**                 | **Relevance**                       |
 | ------------------ | -------- | ------------------ | ------------------------------- | ----------------------------------- |
-| **[@githubUser1]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **plaiimade** | 22.04.26   | [Commit 760fa60](https://github.com/bergwald/sopra-fs26-group-13-client/commit/760fa6047f87093dd6d5a564b516d518c695628d) | Added HTML and CSS for the lobby page | So that we have a proper, goodlooking and well usable lobby |
+|                    | 23.04.26   | [Commit c981d9f](https://github.com/bergwald/sopra-fs26-group-13-client/commit/c981d9f1919ff45de73159e68a5fb548c8e4c60a) | Added HTML and CSS for the results page | Same thing, but for results page. This is also now the last page that was fully added, now HTML on a decent level exists for all pages. |
 | **[@githubUser2]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
 |                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | **[@githubUser3]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
