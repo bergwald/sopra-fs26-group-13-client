@@ -91,8 +91,8 @@ reason).
 |                    | 22.04.26   | [Commit b17d22a](https://github.com/bergwald/sopra-fs26-group-13-client/commit/b17d22a963e36e1f86c808a3ceed52136bc905c1) | Added embeded map and mark where correct location of mountain is | The user can see the solution and can learn from that. |
 | **@juliand924**  | 22.04.26   | [Commit 8143df9](https://github.com/bergwald/sopra-fs26-group-13-client/commit/8143df9666f65217de5a5c0e32d3f26ce1666355) | Core functionality of multiplayer implementation | Added core functionality of joining a game lobby and polling of users in the lobby. Moreover core multiplayer logic was implemented such that only the owner of the lobby can start a increase the round number. Additionally polling of the game rounds were added to facilitate syncing the proceeding of rounds. |
 |                    | 22.04.26   | [Commit 365a050](https://github.com/bergwald/sopra-fs26-group-13-server/commit/365a050db16ede355792212f7d12f89d94b8b9ee) | Multiplayer sync functionality backend | This is a core part of our solution, which enables users, according to their role, to start a game and increase the round numbers. This also introduced a new API endpoint, that only an owner of a session can increase a game round. Thus, these implemented changes let the game rounds sync across all players in the same session. |
-| **[@githubUser4]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **@bergwald** | 20.04.26   | [Commit 26546bc](https://github.com/bergwald/sopra-fs26-group-13-server/commit/26546bc38ac57e454e6d8f6dcfef83c1c296334f) | Remove field "name" from the table of users and require authentication for GET /users/[userid] | Last tweaks needed to integrate the frontend with the backend for all auth (register/login/logout) |
+|                    | 20.04.26   | [Commit 5d88c66](https://github.com/bergwald/sopra-fs26-group-13-client/commit/5d88c66390e2921baab1cf3db9d6c4918ae2a400) | Integrate login/register/logout routes with the backend and protect /users/[id] pages from unauthenticated requests | Integration of the frontend with the backend API for authentication (register/login/logout) |
 
 ---
 
@@ -106,8 +106,8 @@ reason).
 |                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | **@PAKaeser** | 23.04.26   | [Commit 5a44605](https://github.com/bergwald/sopra-fs26-group-13-server/commit/5a44605579bb5dede2002bb3921c79bd35e2dbfc) | Added Tests for GameController, GameService and UserService | lets us catch future problems with changes early + requirement SonarQube coverage |
 |                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
-| **[@githubUser4]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **@bergwald** | 21.04.26   | [Commit e57f5e5](https://github.com/bergwald/sopra-fs26-group-13-server/commit/e57f5e5f265831afb6809ab33652c50d14f3d75b) | Activate routes for single-player gaming; deprecate the demo route /google/panorama | Needed to fully support single-player gaming in the backend |
+|                    | 21.04.26   | [Commit 665bc48](https://github.com/bergwald/sopra-fs26-group-13-client/commit/665bc48ff9a23b71c5b4ef6c0b4696142321d2bd) | Wire the frontend to the backend to be able to play full single-player games | Enabled full single-player gaming in the frontend (incl. integration with backend) |
 
 ---
 
