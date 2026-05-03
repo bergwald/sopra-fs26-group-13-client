@@ -12,6 +12,7 @@ export type LeafletMapLike = {
 type ResultLeafletMapProps = {
   worldBounds: [[number, number ], [number, number]];
   correctCoordinates: [number,number];
+  userGuessCoordinates: [number,number];
   onMapReady: (mapInstance: LeafletMapLike) => void;
 };
 
@@ -19,6 +20,7 @@ type ResultLeafletMapProps = {
 const ResultLeafletMap: React.FC<ResultLeafletMapProps> = ({
   worldBounds,
   correctCoordinates,
+  userGuessCoordinates,
   onMapReady,
 }) => {
   const hasInitializedBoundsRef = React.useRef(false);
@@ -41,22 +43,22 @@ const ResultLeafletMap: React.FC<ResultLeafletMapProps> = ({
         <CircleMarker
           center={correctCoordinates}
           pathOptions={{
-            color: "#f43f5e",
-            fillColor: "#fb7185",
+            color: "#0e8f00",
+            fillColor: "#0e8f00",
             fillOpacity: 0.9,
             weight: 2,
           }}
         />
-        {/*
+        {
         <CircleMarker
-        center={guessCoordinates}
+        center={userGuessCoordinates}
         pathOptions={{
-          color: "#f43f5e",
-          fillColor: "#fb7185",
+          color: "#e60991",
+          fillColor: "#e60991",
           fillOpacity: 0.9,
           weight: 2,
         }}
-      />*/}
+      />}
     </MapContainer>
   );
 };

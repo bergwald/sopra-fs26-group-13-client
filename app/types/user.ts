@@ -96,4 +96,6 @@ export interface GameRoundResult {
   scoreOverall: number;
   latitude: number;
   longitude: number;
+  guessLatitude: number;
+  guessLongitude: number;
 }
