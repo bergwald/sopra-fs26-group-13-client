@@ -227,6 +227,7 @@ const ResultPage: React.FC = () => {
               <ResultLeafletMap
                 worldBounds={worldBounds}
                 correctCoordinates={[roundResult?.latitude ?? -88, roundResult?.longitude ?? 180]}
+                userGuessCoordinates={[roundResult?.guessLatitude ?? -88, roundResult?.guessLongitude ?? 180]}
                 onMapReady={(mapInstance) => {
                   leafletMapRef.current = mapInstance;
                 }}
