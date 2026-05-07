@@ -422,10 +422,6 @@ const GamePage: React.FC = () => {
                 <span className="game-metric-label">Round</span>
                 <strong className="game-metric-value">{roundLabel}</strong>
               </div>
-              <div className="game-metric-card">
-                <span className="game-metric-label">Mode</span>
-                <strong className="game-metric-value">{session.mode}</strong>
-              </div>
             </section>
 
             <section

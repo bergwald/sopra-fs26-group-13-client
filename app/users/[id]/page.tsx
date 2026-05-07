@@ -32,7 +32,6 @@ const UserProfilePage: React.FC = () => {
   const userId = Array.isArray(params.id) ? params.id[0] : params.id;
 
   React.useEffect(() => {
-    const token = getStoredToken();
     const storedCurrentUserId = getStoredCurrentUserId();
     setCurrentUserId(storedCurrentUserId);
 
@@ -41,28 +40,14 @@ const UserProfilePage: React.FC = () => {
       return;
     }
 
-    if (!token || !storedCurrentUserId) {
-      clearStoredAuth();
-      router.replace("/login");
-      return;
-    }
-
     const loadUser = async () => {
       setIsLoading(true);
 
       try {
-        const fetchedUser = await apiService.get<User>(`/users/${userId}`, {
-          Authorization: `Bearer ${token}`,
-        });
+        const fetchedUser = await apiService.get<User>(`/users/${userId}`);
         setUser(fetchedUser);
       } catch (error) {
         const appError = error as ApplicationError;
-
-        if (appError.status === 401) {
-          clearStoredAuth();
-          router.replace("/login");
-          return;
-        }
 
         if (appError.status === 404) {
           alert("User not found.");

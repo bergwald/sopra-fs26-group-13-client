@@ -232,7 +232,6 @@ const LobbyPage: React.FC = () => {
   }
 
   const navMascotImage = MASCOT_IMAGES[currentMascotId ?? 1] ?? MASCOT_IMAGES[1];
-  const sessionExpiryDateTime = sessionUsers[0]?.sessionExpiryDateTime;
   const displaySessionId = sessionId && sessionId.length > 8
     ? `${sessionId.slice(0, 8)}...`
     : sessionId;
@@ -309,12 +308,6 @@ const LobbyPage: React.FC = () => {
           <div className="lobby-session-meta">
             <span>
               <strong>Crew:</strong> {lobbyUsers.length}/{DEFAULT_PLAYER_SLOTS}
-            </span>
-            <span>
-              <strong>Expires:</strong>{" "}
-              {sessionExpiryDateTime
-                ? new Date(sessionExpiryDateTime).toLocaleString()
-                : "Unavailable"}
             </span>
           </div>
         </section>

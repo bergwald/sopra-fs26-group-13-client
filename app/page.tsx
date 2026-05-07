@@ -8,6 +8,7 @@ import {
   getStoredToken,
 } from "@/utils/auth";
 import {
+  LoaderCircle,
   Play,
   Plus,
   Search,
@@ -167,6 +168,8 @@ const formatDistance = (distance: number): string => {
   return `${distance.toFixed(1)} km`;
 };
 
+type PendingHomeAction = "singleplayer" | "create-session" | "join-session" | null;
+
 const HomePage: React.FC = () => {
   const router = useRouter();
   const apiService = useApi();
@@ -178,6 +181,7 @@ const HomePage: React.FC = () => {
   const [isMultiplayerOpen, setIsMultiplayerOpen] = React.useState<boolean>(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = React.useState<boolean>(false);
   const [sessionIdInput, setSessionIdInput] = React.useState<string>("");
+  const [pendingHomeAction, setPendingHomeAction] = React.useState<PendingHomeAction>(null);
 
   React.useEffect(() => {
     const token = getStoredToken();
@@ -229,14 +233,28 @@ const HomePage: React.FC = () => {
   const navProfileImage = currentMascotId
     ? MASCOT_IMAGES[currentMascotId] ?? MASCOT_IMAGES[1]
     : null;
+  const isSessionActionPending = pendingHomeAction !== null;
+  const pendingActionLabel = pendingHomeAction === "singleplayer"
+    ? "Starting singleplayer session..."
+    : pendingHomeAction === "create-session"
+    ? "Creating multiplayer session..."
+    : pendingHomeAction === "join-session"
+    ? "Joining session..."
+    : "";
 
   const handleSingleplayer = async () => {
+    if (isSessionActionPending) {
+      return;
+    }
+
     const token = getStoredToken();
 
     if (!token || !currentUserId) {
       router.push("/login");
       return;
     }
+
+    setPendingHomeAction("singleplayer");
 
     try {
       const response = await apiService.post<{
@@ -268,6 +286,8 @@ const HomePage: React.FC = () => {
       } else {
         alert("Something went wrong while creating a singleplayer session.");
       }
+    } finally {
+      setPendingHomeAction(null);
     }
   };
 
@@ -275,6 +295,10 @@ const HomePage: React.FC = () => {
 
 
   const handleCreateMultiplayer = async() => {
+    if (isSessionActionPending) {
+      return;
+    }
+
       // Example backend direction:
       // const response = await apiService.post<GameSession>(
       //   "/sessions/multiplayer",
@@ -290,6 +314,8 @@ const HomePage: React.FC = () => {
       router.push("/login");
       return;
     }
+
+    setPendingHomeAction("create-session");
 
     try {
       const response = await apiService.post<{
@@ -321,12 +347,28 @@ const HomePage: React.FC = () => {
       } else {
         alert("Something went wrong while creating a multiplayer session.");
       }
+    } finally {
+      setPendingHomeAction(null);
     }
   };
 
 
   const handleJoinSession = async(event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (isSessionActionPending) {
+      return;
+    }
+
+      // Example backend direction:
+      // await apiService.post<void>(
+      //   `/sessions/${normalizedSessionId}/join`,
+      //   undefined,
+      //   { Authorization: `Bearer ${getStoredToken()}` },
+      // );
+      //
+      // If the backend accepts the join, route the player into that lobby.
+      // router.push(`/lobby/${normalizedSessionId}`);
 
     const normalizedSessionId = sessionIdInput.trim();
 
@@ -339,6 +381,8 @@ const HomePage: React.FC = () => {
       router.push("/login");
       return;
     }
+
+    setPendingHomeAction("join-session");
 
     try {
       const response = await apiService.put<{
@@ -366,34 +410,16 @@ const HomePage: React.FC = () => {
       }
 
       if (error instanceof Error) {
-        alert(`Something went wrong while creating a multiplayer session:\n${error.message}`);
+        alert(`Something went wrong while joining the session:\n${error.message}`);
       } else {
-        alert("Something went wrong while creating a multiplayer session.");
+        alert("Something went wrong while joining the session.");
       }
-    }
-
-    try {
-      // Example backend direction:
-      // await apiService.post<void>(
-      //   `/sessions/${normalizedSessionId}/join`,
-      //   undefined,
-      //   { Authorization: `Bearer ${getStoredToken()}` },
-      // );
-      //
-      // If the backend accepts the join, route the player into that lobby.
-      // router.push(`/lobby/${normalizedSessionId}`);
-
-      router.push(`/lobby/${normalizedSessionId}`);
-    } catch (error) {
-      if (error instanceof Error) {
-        alert(`Something went wrong while joining this session:\n${error.message}`);
-      } else {
-        alert("Something went wrong while joining this session.");
-      }
+    } finally {
+      setPendingHomeAction(null);
     }
   };
   return (
-    <div className="home-page-root">
+    <div className="home-page-root" aria-busy={isSessionActionPending}>
       <div className="login-page-background" />
 
       <nav className="login-page-nav profile-page-nav">
@@ -445,6 +471,7 @@ const HomePage: React.FC = () => {
               type="button"
               onClick={() => void handleSingleplayer()}
               className="home-play-card home-play-card-blue"
+              disabled={isSessionActionPending}
             >
               <div className="home-play-icon-wrap home-play-icon-wrap-blue">
                 <UserIcon className="home-play-icon" />
@@ -460,8 +487,14 @@ const HomePage: React.FC = () => {
 
             <button
               type="button"
-              onClick={() => setIsMultiplayerOpen((previousValue) => !previousValue)}
+              onClick={() => {
+                if (isSessionActionPending) {
+                  return;
+                }
+                setIsMultiplayerOpen((previousValue) => !previousValue);
+              }}
               className={`home-play-card home-play-card-indigo ${isMultiplayerOpen ? "home-play-card-active" : ""}`}
+              disabled={isSessionActionPending}
             >
               <div className="home-play-icon-wrap home-play-icon-wrap-indigo">
                 <Users className="home-play-icon" />
@@ -478,6 +511,7 @@ const HomePage: React.FC = () => {
                   type="button"
                   onClick={handleCreateMultiplayer}
                   className="home-multiplayer-button"
+                  disabled={isSessionActionPending}
                 >
                   <div className="home-multiplayer-button-icon home-multiplayer-button-icon-blue">
                     <Plus className="home-multiplayer-button-icon-svg" />
@@ -487,8 +521,14 @@ const HomePage: React.FC = () => {
 
                 <button
                   type="button"
-                  onClick={() => setIsJoinModalOpen(true)}
+                  onClick={() => {
+                    if (isSessionActionPending) {
+                      return;
+                    }
+                    setIsJoinModalOpen(true);
+                  }}
                   className="home-multiplayer-button"
+                  disabled={isSessionActionPending}
                 >
                   <div className="home-multiplayer-button-icon home-multiplayer-button-icon-indigo">
                     <Search className="home-multiplayer-button-icon-svg" />
@@ -578,6 +618,7 @@ const HomePage: React.FC = () => {
               onClick={() => setIsJoinModalOpen(false)}
               className="home-modal-close"
               aria-label="Close join session dialog"
+              disabled={isSessionActionPending}
             >
               <X className="home-modal-close-icon" />
             </button>
@@ -599,15 +640,26 @@ const HomePage: React.FC = () => {
                 placeholder="e.g. A8X9-K2M1"
                 className="home-modal-input"
                 autoFocus
+                disabled={isSessionActionPending}
               />
               <button
                 type="submit"
                 className="home-modal-submit"
-                disabled={!sessionIdInput.trim()}
+                disabled={!sessionIdInput.trim() || isSessionActionPending}
               >
-                Join Lobby
+                {pendingHomeAction === "join-session" ? "Joining..." : "Join Lobby"}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {isSessionActionPending && (
+        <div className="home-loading-backdrop" role="status" aria-live="polite">
+          <div className="home-loading-card">
+            <LoaderCircle className="home-loading-spinner" />
+            <p className="home-loading-title">{pendingActionLabel}</p>
+            <p className="home-loading-text">Please wait for the server response before trying again.</p>
           </div>
         </div>
       )}
