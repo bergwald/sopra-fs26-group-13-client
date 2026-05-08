@@ -39,6 +39,10 @@ const MASCOT_IMAGES: Record<number, string> = {
   2: "/mascots/robot-flower.svg",
   3: "/mascots/saturn-space.svg",
   4: "/mascots/smiling-sun.svg",
+  5: "/mascots/cactus-sunglasses.svg",
+  6: "/mascots/crowned-mountain.svg",
+  7: "/mascots/yellowstone-rock.svg",
+  8: "/mascots/snowman-scarf.svg",
 };
 
 const DEFAULT_LEADERBOARD_USERS: LeaderboardUser[] = [
@@ -232,7 +236,8 @@ const HomePage: React.FC = () => {
 
   const navProfileImage = currentMascotId
     ? MASCOT_IMAGES[currentMascotId] ?? MASCOT_IMAGES[1]
-    : null;
+    : undefined;
+  const isLoggedIn = getStoredToken() !== null && currentUserId !== null && currentMascotId !== null;
   const isSessionActionPending = pendingHomeAction !== null;
   const pendingActionLabel = pendingHomeAction === "singleplayer"
     ? "Starting singleplayer session..."
@@ -434,11 +439,11 @@ const HomePage: React.FC = () => {
 
         <div className="login-page-nav-right">
           <Link
-            href={currentUserId ? `/users/${currentUserId}` : "/login"}
+            href={isLoggedIn ? `/users/${currentUserId}` : "/login"}
             className="profile-nav-avatar-link"
-            aria-label={currentUserId ? "Open your profile" : "Open login page"}
+            aria-label={isLoggedIn ? "Open your profile" : "Open login page"}
           >
-            {navProfileImage
+            {isLoggedIn
               ? (
                 <img
                   src={navProfileImage}

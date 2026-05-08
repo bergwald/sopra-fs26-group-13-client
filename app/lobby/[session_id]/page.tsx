@@ -13,6 +13,7 @@ import {
   LogOut,
   Play,
   ShipWheel,
+  UserCircle,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -28,6 +29,10 @@ const MASCOT_IMAGES: Record<number, string> = {
   2: "/mascots/robot-flower.svg",
   3: "/mascots/saturn-space.svg",
   4: "/mascots/smiling-sun.svg",
+  5: "/mascots/cactus-sunglasses.svg",
+  6: "/mascots/crowned-mountain.svg",
+  7: "/mascots/yellowstone-rock.svg",
+  8: "/mascots/snowman-scarf.svg",
 };
 
 type LobbyUser = BackendSessionUserDetails & {
@@ -134,7 +139,7 @@ const LobbyPage: React.FC = () => {
         const storedCurrentUserId = getStoredCurrentUserId();
         const storedCurrentMascotId = getStoredCurrentMascotId();
 
-        if (!token || !storedCurrentUserId) {
+        if (!token || !storedCurrentUserId || !storedCurrentMascotId) {
           router.replace("/");
           return;
         }
@@ -231,7 +236,10 @@ const LobbyPage: React.FC = () => {
     return <div className="login-container">{error}</div>;
   }
 
-  const navMascotImage = MASCOT_IMAGES[currentMascotId ?? 1] ?? MASCOT_IMAGES[1];
+  const navMascotImage = currentMascotId
+    ? MASCOT_IMAGES[currentMascotId] ?? MASCOT_IMAGES[1]
+    : undefined;
+  const isLoggedIn = getStoredToken() !== null && currentUserId !== null && currentMascotId !== null;
   const displaySessionId = sessionId && sessionId.length > 8
     ? `${sessionId.slice(0, 8)}...`
     : sessionId;
@@ -274,15 +282,19 @@ const LobbyPage: React.FC = () => {
 
         <div className="login-page-nav-right">
           <Link
-            href={currentUserId ? `/users/${currentUserId}` : "/login"}
+            href={isLoggedIn ? `/users/${currentUserId}` : "/login"}
             className="profile-nav-avatar-link"
-            aria-label={currentUserId ? "Open your profile" : "Open login page"}
+            aria-label={isLoggedIn ? "Open your profile" : "Open login page"}
           >
-            <img
-              src={navMascotImage}
-              alt="Profile mascot"
-              className="profile-nav-avatar-image"
-            />
+            {isLoggedIn
+              ? (
+                <img
+                  src={navMascotImage}
+                  alt="Profile mascot"
+                  className="profile-nav-avatar-image"
+                />
+              )
+              : <UserCircle className="profile-nav-avatar-icon" />}
           </Link>
         </div>
         <div className="login-page-nav-divider" />

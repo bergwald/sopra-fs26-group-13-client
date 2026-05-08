@@ -3,13 +3,14 @@
 import { useApi } from "@/hooks/useApi";
 import type { ApplicationError } from "@/types/error";
 import type { User, UserSelfUpdateRequest } from "@/types/user";
-// import {
-//   getStoredCurrentMascotId,
-//   setStoredCurrentMascotId,
-// } from "@/utils/auth";
-import { clearStoredAuth, getStoredCurrentUserId, getStoredToken } from "@/utils/auth";
-// import { Camera, X } from "lucide-react";
-import { ArrowLeft, Save, UserCircle } from "lucide-react";
+import {
+  clearStoredAuth,
+  getStoredCurrentMascotId,
+  getStoredCurrentUserId,
+  getStoredToken,
+  setStoredCurrentMascotId,
+} from "@/utils/auth";
+import { ArrowLeft, Camera, Save, UserCircle, X } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import React from "react";
@@ -18,15 +19,19 @@ type EditProfileFormValues = {
   username: string;
   bio: string;
   newPassword: string;
-  // mascot_id: number;
+  mascot_id: number;
 };
 
-// const MASCOT_IMAGES: Record<number, string> = {
-//   1: "/mascots/earth-sunglasses.svg",
-//   2: "/mascots/robot-flower.svg",
-//   3: "/mascots/saturn-space.svg",
-//   4: "/mascots/smiling-sun.svg",
-// };
+const MASCOT_IMAGES: Record<number, string> = {
+  1: "/mascots/earth-sunglasses.svg",
+  2: "/mascots/robot-flower.svg",
+  3: "/mascots/saturn-space.svg",
+  4: "/mascots/smiling-sun.svg",
+  5: "/mascots/cactus-sunglasses.svg",
+  6: "/mascots/crowned-mountain.svg",
+  7: "/mascots/yellowstone-rock.svg",
+  8: "/mascots/snowman-scarf.svg",
+};
 
 const UserSettingsPage: React.FC = () => {
   const apiService = useApi();
@@ -34,28 +39,29 @@ const UserSettingsPage: React.FC = () => {
   const params = useParams<{ id: string }>();
   const [isAuthChecked, setIsAuthChecked] = React.useState<boolean>(false);
   const [currentUserId, setCurrentUserId] = React.useState<number | null>(null);
+  const [showMascotModal, setShowMascotModal] = React.useState<boolean>(false);
+  const [currentMascotId, setCurrentMascotId] = React.useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
   const [errorMessage, setErrorMessage] = React.useState<string>("");
-  // const [showMascotModal, setShowMascotModal] = React.useState<boolean>(false);
-  // const [currentMascotId, setCurrentMascotId] = React.useState<number | null>(null);
   const [initialValues, setInitialValues] = React.useState<EditProfileFormValues>({
     username: "",
     bio: "",
     newPassword: "",
-    // mascot_id: 1,
+    mascot_id: 1,
   });
   const [formValues, setFormValues] = React.useState<EditProfileFormValues>({
     username: "",
     bio: "",
     newPassword: "",
-    // mascot_id: 1,
+    mascot_id: 1,
   });
 
   const routeUserId = Array.isArray(params.id) ? params.id[0] : params.id;
-  // const selectedMascotImage = MASCOT_IMAGES[formValues.mascot_id] ?? MASCOT_IMAGES[1];
-  // const navProfileImage = currentUserId && currentMascotId
-  //   ? MASCOT_IMAGES[currentMascotId] ?? MASCOT_IMAGES[1]
-  //   : null;
+  const selectedMascotImage = MASCOT_IMAGES[formValues.mascot_id] ?? MASCOT_IMAGES[1];
+  const navProfileImage = currentMascotId
+    ? MASCOT_IMAGES[currentMascotId] ?? MASCOT_IMAGES[1]
+    : undefined;
+  const isLoggedIn = getStoredToken() !== null && currentUserId !== null && currentMascotId !== null;
 
   React.useEffect(() => {
     const parsedRouteUserId = Number(routeUserId);
@@ -67,9 +73,9 @@ const UserSettingsPage: React.FC = () => {
 
     const token = getStoredToken();
     const storedCurrentUserId = getStoredCurrentUserId();
-    // const storedCurrentMascotId = getStoredCurrentMascotId();
+    const storedCurrentMascotId = getStoredCurrentMascotId();
 
-    if (!token || !storedCurrentUserId) {
+    if (!token || !storedCurrentUserId || !storedCurrentMascotId) {
       clearStoredAuth();
       router.replace(`/users/${parsedRouteUserId}`);
       return;
@@ -89,13 +95,13 @@ const UserSettingsPage: React.FC = () => {
           username: fetchedUser.username,
           bio: fetchedUser.bio ?? "",
           newPassword: "",
-          // mascot_id: fetchedUser.mascot_id ?? 1,
+          mascot_id: fetchedUser.mascot_id ?? 1,
         };
 
         setInitialValues(nextFormValues);
         setFormValues(nextFormValues);
         setCurrentUserId(storedCurrentUserId);
-        // setCurrentMascotId(storedCurrentMascotId);
+        setCurrentMascotId(storedCurrentMascotId);
         setIsAuthChecked(true);
       } catch (error) {
         const appError = error as ApplicationError;
@@ -145,9 +151,14 @@ const UserSettingsPage: React.FC = () => {
       payload.bio = trimmedBio;
     }
 
-    // if (formValues.mascot_id !== initialValues.mascot_id) {
-    //   payload.mascot_id = formValues.mascot_id;
-    // }
+    if (formValues.mascot_id !== initialValues.mascot_id) {
+      if (!MASCOT_IMAGES[formValues.mascot_id]) {
+        setErrorMessage("Please select a valid mascot.");
+        return;
+      }
+
+      payload.mascot_id = formValues.mascot_id;
+    }
 
     if (trimmedPassword) {
       if (trimmedPassword.length < 8) {
@@ -170,17 +181,28 @@ const UserSettingsPage: React.FC = () => {
         Authorization: `Bearer ${token}`,
       });
 
+      setInitialValues({
+        ...formValues,
+        bio: trimmedBio,
+        newPassword: "",
+      });
+      setFormValues((previousValues) => ({
+        ...previousValues,
+        bio: trimmedBio,
+        newPassword: "",
+      }));
+
+      if (payload.mascot_id) {
+        setStoredCurrentMascotId(payload.mascot_id);
+        setCurrentMascotId(payload.mascot_id);
+      }
+
       if (payload.newPassword) {
         clearStoredAuth();
         alert("Password changed successfully. Please log in again.");
         router.replace("/login");
         return;
       }
-
-      // if (payload.mascot_id) {
-      //   setStoredCurrentMascotId(payload.mascot_id);
-      //   setCurrentMascotId(payload.mascot_id);
-      // }
 
       router.push(`/users/${currentUserId}`);
     } catch (error) {
@@ -233,20 +255,19 @@ const UserSettingsPage: React.FC = () => {
 
         <div className="login-page-nav-right">
           <Link
-            href={currentUserId ? `/users/${currentUserId}` : "/login"}
+            href={isLoggedIn ? `/users/${currentUserId}` : "/login"}
             className="profile-nav-avatar-link"
-            aria-label={currentUserId ? "Open your profile" : "Open login page"}
+            aria-label={isLoggedIn ? "Open your profile" : "Open login page"}
           >
-            {/* {navProfileImage
+            {isLoggedIn
               ? (
                 <img
                   src={navProfileImage}
-                  alt="Your mascot"
+                  alt="Profile mascot"
                   className="profile-nav-avatar-image"
                 />
               )
-              : <UserCircle className="profile-nav-avatar-icon" />} */}
-            <UserCircle className="profile-nav-avatar-icon" />
+              : <UserCircle className="profile-nav-avatar-icon" />}
           </Link>
         </div>
         <div className="login-page-nav-divider" />
@@ -268,7 +289,7 @@ const UserSettingsPage: React.FC = () => {
         <section className="edit-profile-card">
           <form className="edit-profile-form" onSubmit={handleEditProfile}>
             <div className="edit-profile-avatar-section">
-              {/* <button
+              <button
                 type="button"
                 className="edit-profile-avatar-button"
                 onClick={() => setShowMascotModal(true)}
@@ -284,11 +305,8 @@ const UserSettingsPage: React.FC = () => {
                 <span className="edit-profile-avatar-overlay" aria-hidden="true">
                   <Camera className="edit-profile-avatar-camera" />
                 </span>
-              </button> */}
-              <span className="edit-profile-avatar-frame">
-                <UserCircle className="profile-nav-avatar-icon" />
-              </span>
-              <p className="edit-profile-avatar-hint">Profile picture is not editable yet.</p>
+              </button>
+              <p className="edit-profile-avatar-hint">Click to change picture</p>
             </div>
 
             <hr className="edit-profile-divider" />
@@ -364,7 +382,7 @@ const UserSettingsPage: React.FC = () => {
         </section>
       </main>
 
-      {/* {showMascotModal && (
+      {showMascotModal && (
         <div className="edit-profile-modal-backdrop">
           <div className="edit-profile-modal" role="dialog" aria-modal="true">
             <button
@@ -412,7 +430,7 @@ const UserSettingsPage: React.FC = () => {
             </div>
           </div>
         </div>
-      )} */}
+      )}
 
       <footer className="login-page-footer profile-page-footer">
         <div className="login-page-footer-content">

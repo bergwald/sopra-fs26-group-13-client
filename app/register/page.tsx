@@ -4,7 +4,11 @@ import { useApi } from "@/hooks/useApi";
 import useRedirectIfAuthenticated from "@/hooks/useRedirectIfAuthenticated";
 import type { ApplicationError } from "@/types/error";
 import type { AuthResponse, RegisterRequest } from "@/types/user";
-import { setStoredCurrentUserId, setStoredToken } from "@/utils/auth";
+import {
+  setStoredCurrentMascotId,
+  setStoredCurrentUserId,
+  setStoredToken,
+} from "@/utils/auth";
 import { Alert, ConfigProvider, Form, Input } from "antd";
 import { ArrowRight, UserPlus } from "lucide-react";
 import Link from "next/link";
@@ -32,6 +36,7 @@ const RegisterPage: React.FC = () => {
 
       setStoredToken(response.token);
       setStoredCurrentUserId(response.id);
+      setStoredCurrentMascotId(response.mascot_id ?? 1);
       router.push(`/users/${response.id}`);
     } catch (error) {
       const appError = error as ApplicationError;
