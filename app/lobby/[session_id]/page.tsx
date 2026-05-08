@@ -247,8 +247,7 @@ const LobbyPage: React.FC = () => {
     return {
       ...user,
       username: fetchedUser?.username ?? `User ${user.id}`,
-      mascotId: 1,
-      // mascotId: fetchedUser?.mascot_id ?? 1,
+      mascotId: fetchedUser?.mascot_id ?? 1,
     };
   });
 
