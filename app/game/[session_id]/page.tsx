@@ -40,9 +40,7 @@ const MASCOT_IMAGES: Record<number, string> = {
   3: "/mascots/saturn-space.svg",
   4: "/mascots/smiling-sun.svg",
   5: "/mascots/cactus-sunglasses.svg",
-  6: "/mascots/crowned-mountain.svg",
-  7: "/mascots/yellowstone-rock.svg",
-  8: "/mascots/snowman-scarf.svg",
+  6: "/mascots/snowman-scarf.svg",
 };
 
 const DEFAULT_SESSION: GameSession = {
