@@ -124,7 +124,11 @@ const mapBackendGameDataToGameData = (
 };
 
 const GameLeafletMap = dynamic(() => import("./GameLeafletMap"), { ssr: false });
-
+type GuessCoordinates = {
+  latitude: number;
+  displayLongitude: number;
+  normalizedLongitude: number;
+};
 
 const GamePage: React.FC = () => {
   const router = useRouter();
@@ -142,10 +146,7 @@ const GamePage: React.FC = () => {
     formatTimeLeft(DEFAULT_SESSION.expiry_date),
   );
   const [errorMessage, setErrorMessage] = React.useState<string>("");
-  const [selectedGuess, setSelectedGuess] = React.useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
+  const [selectedGuess, setSelectedGuess] = React.useState<GuessCoordinates | null>(null);
   const leafletMapRef = React.useRef<LeafletMapLike | null>(null);
 
   const sessionId = Array.isArray(params.session_id)
@@ -274,7 +275,7 @@ const GamePage: React.FC = () => {
       session_id: session.session_id,
       round_number: session.round_number,
       latitude: selectedGuess?.latitude ?? -1.0,
-      longitude: selectedGuess?.longitude ?? -1.0, // Setting them to default -1.0 in case the time ran out or other issues happened.
+      longitude: selectedGuess?.normalizedLongitude ?? -1.0, // Setting them to default -1.0 in case the time ran out or other issues happened.
 
     };
     console.log("Guess payload: ", guessPayload);
@@ -459,9 +460,7 @@ const GamePage: React.FC = () => {
                 <div className="game-guess-readout">
                   <span className="game-map-header-eyebrow">Selected Guess</span>
                   <strong className="game-guess-readout-value">
-                    {selectedGuess
-                      ? `${selectedGuess.latitude}, ${selectedGuess.longitude}`
-                      : "No guess placed yet"}
+                  {selectedGuess ? `${selectedGuess.latitude}, ${selectedGuess.normalizedLongitude}`: "No guess placed yet"}
                   </strong>
                 </div>
 
