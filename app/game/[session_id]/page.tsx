@@ -20,6 +20,7 @@ import {
   getStoredCurrentUserId,
   getStoredToken,
 } from "@/utils/auth";
+import { parseAbsoluteApiTimestamp } from "@/utils/apiTime";
 import { storeSinglePlayerRoundResult } from "@/utils/singleplayerResult";
 import {
   Clock3,
@@ -73,8 +74,12 @@ const formatTimeLeftMilliseconds = (millisecondsLeft: number): string => {
   return `${minutes}:${seconds}`;
 };
 
-const getRoundMillisecondsLeft = (roundStarted: string): number => {
-  return new Date(roundStarted).getTime() + ROUND_LENGTH_MS - Date.now();
+const getRoundMillisecondsLeft = (roundStarted: string): number | null => {
+  const roundStartedMilliseconds = parseAbsoluteApiTimestamp(roundStarted);
+  if (roundStartedMilliseconds === null) {
+    return null;
+  }
+  return roundStartedMilliseconds + ROUND_LENGTH_MS - Date.now();
 };
 
 
@@ -198,11 +203,13 @@ const GamePage: React.FC = () => {
         ...mappedSession,
         round_started: backendGameData.roundStartedDateTime ?? mappedSession.round_started,
       };
+      const millisecondsLeft = getRoundMillisecondsLeft(sessionForRound.round_started);
+      if (millisecondsLeft === null) {
+        throw new Error("The server returned an invalid round start time.");
+      }
       console.log("Mapped session: ", sessionForRound);
       setSession(sessionForRound);
-      setRoundTimeLeft(
-        formatTimeLeftMilliseconds(getRoundMillisecondsLeft(sessionForRound.round_started)),
-      );
+      setRoundTimeLeft(formatTimeLeftMilliseconds(millisecondsLeft));
       setGameData(mapBackendGameDataToGameData(backendGameData, sessionForRound));
       setSelectedGuess(null);
       setHasSubmittedGuess(false);
@@ -323,6 +330,11 @@ const GamePage: React.FC = () => {
     const updateRoundTimer = () => {
       const millisecondsLeft = getRoundMillisecondsLeft(session.round_started);
 
+      if (millisecondsLeft === null) {
+        setErrorMessage("The server returned an invalid round start time.");
+        return false;
+      }
+
       if (millisecondsLeft <= 0 && !hasSubmittedGuess) {
         console.log("Timeout reached!");
         setRoundTimeLeft("00:00");
@@ -358,6 +370,10 @@ const GamePage: React.FC = () => {
         {errorMessage || "Loading game session..."}
       </div>
     );
+  }
+
+  if (errorMessage) {
+    return <div className="login-container">{errorMessage}</div>;
   }
 
 
