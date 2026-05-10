@@ -73,12 +73,14 @@ export interface GameResult {
 
 export interface BackendSessionUserDetails {
   id: number;
-  sessionId: string;
-  sessionExpiryDateTime: string;
-  roundStartedDateTime: string;
+  username: string;
+  userRole: string;
   roundNumber: number;
   score: number;
-  userRole: "OWNER" | "PLAYER";
+
+  guessSubmitted: boolean;
+  guessLatitude: number;
+  guessLongitude: number;
 }
 
 export interface BackendGameData {

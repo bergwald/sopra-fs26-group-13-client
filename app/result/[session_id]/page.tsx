@@ -39,7 +39,6 @@ const buildAuthorizedHeaders = (token: string, userId: number): HeadersInit => {
 };
 
 const ResultLeafletMap = dynamic(() => import("./ResultLeafletMap"), { ssr: false });
-
 const ResultPage: React.FC = () => {
   const apiService = useApi();
   const router = useRouter();
@@ -50,6 +49,7 @@ const ResultPage: React.FC = () => {
   const [currentUserId, setCurrentUserId] = React.useState<number | null>(null);
   const [currentMascotId, setCurrentMascotId] = React.useState<number | null>(null);
   const [sessionUser, setSessionUser] = React.useState<BackendSessionUserDetails | null>(null);
+  const [sessionUsers, setSessionUsers] = React.useState<BackendSessionUserDetails[]>([]);
   const [roundResult, setRoundResult] = React.useState<GameRoundResult | null>(null);
   const [errorMessage, setErrorMessage] = React.useState<string>("");
   const [currentUserRole, setCurrentUserRole] = React.useState<string | null>(null);
@@ -89,13 +89,16 @@ const ResultPage: React.FC = () => {
 
       try {
         const headers = buildAuthorizedHeaders(token, storedCurrentUserId);
-        const sessionUsers = await apiService.get<BackendSessionUserDetails[]>(
+        const fetchedUsers = await apiService.get<BackendSessionUserDetails[]>(
           `/session/${sessionId}`,
           headers,
         );
-        const currentSessionUser = sessionUsers.find((entry) => {
-          return entry.id === storedCurrentUserId;
-        });
+        
+        setSessionUsers(fetchedUsers);
+        
+        const currentSessionUser = fetchedUsers.find(
+          (entry) => entry.id === storedCurrentUserId,
+        );
 
         if (!currentSessionUser) {
           router.replace("/");
@@ -123,13 +126,24 @@ const ResultPage: React.FC = () => {
   const completedRoundNumber = roundResult?.round_number
     ?? (sessionUser ? Math.min(Math.max(sessionUser.roundNumber - 1, 1), TOTAL_ROUNDS) : 1);
   const isFinished = completedRoundNumber >= TOTAL_ROUNDS;
-
+  const allGuessCoordinates = React.useMemo(() => {
+    if (!sessionUsers || !roundResult) return [];
+  
+    return sessionUsers
+      .filter((u) => u.guessSubmitted)
+      .map((u) => ({
+        lat: u.guessLatitude,
+        lng: u.guessLongitude,
+        id: u.id,
+        username: u.username,
+        role: u.userRole,
+      }));
+  }, [sessionUsers, roundResult]);
   React.useEffect(() => {
     const shouldPoll = !isLoading &&
       sessionUser &&
       completedRoundNumber < TOTAL_ROUNDS &&
-      sessionUser.roundNumber <= TOTAL_ROUNDS &&
-      currentUserRole !== "OWNER";
+      sessionUser.roundNumber <= TOTAL_ROUNDS;
 
     if (!shouldPoll) {
       return;
@@ -144,11 +158,16 @@ const ResultPage: React.FC = () => {
         if (!token || !storedCurrentUserId || !sessionId) return;
 
         const headers = buildAuthorizedHeaders(token, storedCurrentUserId);
-        const sessionUsers = await apiService.get<BackendSessionUserDetails[]>(
+        const fetchedUsers = await apiService.get<BackendSessionUserDetails[]>(
           `/session/${sessionId}`,
           headers,
         );
-        const currentSessionUser = sessionUsers.find((entry) => entry.id === storedCurrentUserId);
+        
+        setSessionUsers(fetchedUsers);
+        
+        const currentSessionUser = fetchedUsers.find(
+          (entry) => entry.id === storedCurrentUserId,
+        );
 
         if (isMounted && currentSessionUser && currentSessionUser.roundNumber > (sessionUser?.roundNumber ?? 0)) {
           clearInterval(interval);
@@ -234,10 +253,13 @@ const ResultPage: React.FC = () => {
 
           <div className="result-map-card">
             <div className="result-map-frame">
-              <ResultLeafletMap
+            <ResultLeafletMap
                 worldBounds={worldBounds}
-                correctCoordinates={[roundResult?.latitude ?? -88, roundResult?.longitude ?? 180]}
-                userGuessCoordinates={[roundResult?.guessLatitude ?? -88, roundResult?.guessLongitude ?? 180]}
+                correctCoordinates={[
+                  roundResult?.latitude ?? -88,
+                  roundResult?.longitude ?? 180,
+                ]}
+                allGuessCoordinates={allGuessCoordinates}
                 onMapReady={(mapInstance) => {
                   leafletMapRef.current = mapInstance;
                 }}
