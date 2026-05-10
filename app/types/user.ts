@@ -85,6 +85,7 @@ export interface BackendGameData {
   imageUrl: string;
   roundNumber: number;
   sessionId: string;
+  roundStartedDateTime?: string;
 }
 
 export interface GameRoundResult {
