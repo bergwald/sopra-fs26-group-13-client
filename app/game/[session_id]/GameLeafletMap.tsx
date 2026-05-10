@@ -5,7 +5,8 @@ import { CircleMarker, MapContainer, TileLayer, useMapEvents } from "react-leafl
 
 type GuessCoordinates = {
   latitude: number;
-  longitude: number;
+  displayLongitude: number;
+  normalizedLongitude: number;
 };
 
 export type LeafletMapLike = {
@@ -30,15 +31,23 @@ type GameLeafletMapProps = {
 const clamp = (value: number, min: number, max: number): number => {
   return Math.min(Math.max(value, min), max);
 };
+const normalizeLongitude = (lng: number): number => {
+  return ((lng + 180) % 360 + 360) % 360 - 180;
+};
 
 const MapClickHandler: React.FC<{
   onGuessSelected: (nextGuess: GuessCoordinates) => void;
 }> = ({ onGuessSelected }) => {
   useMapEvents({
     click: (event: LeafletClickEventLike) => {
-      const latitude = Number(clamp(event.latlng.lat, -90, 90).toFixed(5));
-      const longitude = Number(clamp(event.latlng.lng, -180, 180).toFixed(5));
-      onGuessSelected({ latitude, longitude });
+      const rawLng = event.latlng.lng;
+      onGuessSelected({
+        latitude: Number(event.latlng.lat.toFixed(5)),
+        displayLongitude: Number(rawLng.toFixed(5)),
+        normalizedLongitude: Number(
+          normalizeLongitude(rawLng).toFixed(5)
+        ),
+      });
     },
   });
 
@@ -66,12 +75,16 @@ const GameLeafletMap: React.FC<GameLeafletMapProps> = ({
         onMapReady(mapInstance);
         mapInstance.fitBounds(worldBounds);
       }}
+      {...{        
+      worldCopyJump: false,
+      }}
     >
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      noWrap={false}
       <MapClickHandler onGuessSelected={onGuessSelected} />
       {selectedGuess ? (
         <CircleMarker
-          center={[selectedGuess.latitude, selectedGuess.longitude]}
+          center={[selectedGuess.latitude, selectedGuess.displayLongitude]}
           pathOptions={{
             color: "#f43f5e",
             fillColor: "#fb7185",

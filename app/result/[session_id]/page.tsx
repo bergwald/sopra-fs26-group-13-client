@@ -15,6 +15,7 @@ import { readSinglePlayerRoundResult } from "@/utils/singleplayerResult";
 import {
   ArrowRight,
   Trophy,
+  UserCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -26,6 +27,8 @@ const MASCOT_IMAGES: Record<number, string> = {
   2: "/mascots/robot-flower.svg",
   3: "/mascots/saturn-space.svg",
   4: "/mascots/smiling-sun.svg",
+  5: "/mascots/cactus-sunglasses.svg",
+  6: "/mascots/snowman-scarf.svg",
 };
  
 const buildAuthorizedHeaders = (token: string, userId: number): HeadersInit => {
@@ -58,6 +61,7 @@ const ResultPage: React.FC = () => {
   const sessionId = Array.isArray(params.session_id)
     ? params.session_id[0]
     : params.session_id;
+  const isLoggedIn = getStoredToken() !== null && currentUserId !== null && currentMascotId !== null;
   const roundParamValue = searchParams.get("round");
   const roundParam = roundParamValue ? Number(roundParamValue) : null;
 
@@ -73,7 +77,7 @@ const ResultPage: React.FC = () => {
       setIsLoading(true);
       setErrorMessage("");
 
-      if (!token || !storedCurrentUserId) {
+      if (!token || !storedCurrentUserId || !storedCurrentMascotId) {
         router.replace("/login");
         return;
       }
@@ -170,7 +174,9 @@ const ResultPage: React.FC = () => {
   }
 
   const displayScoreOverall = roundResult?.scoreOverall ?? sessionUser.score;
-  const navMascotImage = MASCOT_IMAGES[currentMascotId ?? 1] ?? MASCOT_IMAGES[1];
+  const navMascotImage = currentMascotId
+    ? MASCOT_IMAGES[currentMascotId] ?? MASCOT_IMAGES[1]
+    : undefined;
   
 
   return (
@@ -192,15 +198,19 @@ const ResultPage: React.FC = () => {
 
         <div className="login-page-nav-right">
           <Link
-            href={currentUserId ? `/users/${currentUserId}` : "/login"}
+            href={isLoggedIn ? `/users/${currentUserId}` : "/login"}
             className="profile-nav-avatar-link"
-            aria-label={currentUserId ? "Open your profile" : "Open login page"}
+            aria-label={isLoggedIn ? "Open your profile" : "Open login page"}
           >
-            <img
-              src={navMascotImage}
-              alt="Profile mascot"
-              className="profile-nav-avatar-image"
-            />
+            {isLoggedIn
+              ? (
+                <img
+                  src={navMascotImage}
+                  alt="Profile mascot"
+                  className="profile-nav-avatar-image"
+                />
+              )
+              : <UserCircle className="profile-nav-avatar-icon" />}
           </Link>
         </div>
         <div className="login-page-nav-divider" />

@@ -39,6 +39,8 @@ const MASCOT_IMAGES: Record<number, string> = {
   2: "/mascots/robot-flower.svg",
   3: "/mascots/saturn-space.svg",
   4: "/mascots/smiling-sun.svg",
+  5: "/mascots/cactus-sunglasses.svg",
+  6: "/mascots/snowman-scarf.svg",
 };
 
 const DEFAULT_SESSION: GameSession = {
@@ -113,7 +115,11 @@ const mapBackendGameDataToGameData = (
 };
 
 const GameLeafletMap = dynamic(() => import("./GameLeafletMap"), { ssr: false });
-
+type GuessCoordinates = {
+  latitude: number;
+  displayLongitude: number;
+  normalizedLongitude: number;
+};
 
 const GamePage: React.FC = () => {
   const router = useRouter();
@@ -131,10 +137,7 @@ const GamePage: React.FC = () => {
     formatTimeLeftMilliseconds(ROUND_LENGTH_MS),
   );
   const [errorMessage, setErrorMessage] = React.useState<string>("");
-  const [selectedGuess, setSelectedGuess] = React.useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
+  const [selectedGuess, setSelectedGuess] = React.useState<GuessCoordinates | null>(null);
   const leafletMapRef = React.useRef<LeafletMapLike | null>(null);
 
   const sessionId = Array.isArray(params.session_id)
@@ -142,7 +145,8 @@ const GamePage: React.FC = () => {
     : params.session_id;
   const navProfileImage = currentMascotId
     ? MASCOT_IMAGES[currentMascotId] ?? MASCOT_IMAGES[1]
-    : null;
+    : undefined;
+  const isLoggedIn = getStoredToken() !== null && currentUserId !== null && currentMascotId !== null;
 
 
   const loadGamePageData = React.useCallback(async () => {
@@ -155,7 +159,7 @@ const GamePage: React.FC = () => {
     setIsLoading(true);
     setErrorMessage("");
 
-    if (!token || !storedCurrentUserId) {
+    if (!token || !storedCurrentUserId || !storedCurrentMascotId) {
       router.replace("/login");
       return;
     }
@@ -265,7 +269,7 @@ const GamePage: React.FC = () => {
       session_id: session.session_id,
       round_number: session.round_number,
       latitude: selectedGuess?.latitude ?? -1.0,
-      longitude: selectedGuess?.longitude ?? -1.0, // Setting them to default -1.0 in case the time ran out or other issues happened.
+      longitude: selectedGuess?.normalizedLongitude ?? -1.0, // Setting them to default -1.0 in case the time ran out or other issues happened.
 
     };
     console.log("Guess payload: ", guessPayload);
@@ -383,15 +387,15 @@ const GamePage: React.FC = () => {
 
         <div className="login-page-nav-right">
           <Link
-            href={currentUserId ? `/users/${currentUserId}` : "/"}
+            href={isLoggedIn ? `/users/${currentUserId}` : "/login"}
             className="profile-nav-avatar-link"
-            aria-label={currentUserId ? "Open your profile" : "Go to homepage"}
+            aria-label={isLoggedIn ? "Open your profile" : "Open login page"}
           >
-            {navProfileImage
+            {isLoggedIn
               ? (
                 <img
                   src={navProfileImage}
-                  alt="Your mascot"
+                  alt="Profile mascot"
                   className="profile-nav-avatar-image"
                 />
               )
@@ -451,9 +455,7 @@ const GamePage: React.FC = () => {
                 <div className="game-guess-readout">
                   <span className="game-map-header-eyebrow">Selected Guess</span>
                   <strong className="game-guess-readout-value">
-                    {selectedGuess
-                      ? `${selectedGuess.latitude}, ${selectedGuess.longitude}`
-                      : "No guess placed yet"}
+                  {selectedGuess ? `${selectedGuess.latitude}, ${selectedGuess.normalizedLongitude}`: "No guess placed yet"}
                   </strong>
                 </div>
 
