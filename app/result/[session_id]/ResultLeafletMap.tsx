@@ -58,7 +58,6 @@ const ResultLeafletMap: React.FC<ResultLeafletMapProps> = ({
       {/* Correct location marker */}
       <CircleMarker
         center={correctCoordinates}
-        radius={10}
         pathOptions={{
           color: "#0e8f00",
           fillColor: "#0e8f00",
@@ -74,7 +73,6 @@ const ResultLeafletMap: React.FC<ResultLeafletMapProps> = ({
         <CircleMarker
           key={guess.id}
           center={[guess.lat, guess.lng]}
-          radius={8}
           pathOptions={{
             color: guess.role === "OWNER" ? "#ffd700" : "#e60991",
             fillColor: guess.role === "OWNER" ? "#ffd700" : "#e60991",
