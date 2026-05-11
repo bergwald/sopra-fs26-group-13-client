@@ -201,7 +201,7 @@ const ResultPage: React.FC = () => {
     : null;
   const displayDistance = roundResult && hasSubmittedGuess
     ? roundResult.distance.toFixed(2)
-    : "N/A";
+    : "No guess";
   const navMascotImage = currentMascotId
     ? MASCOT_IMAGES[currentMascotId] ?? MASCOT_IMAGES[1]
     : undefined;
