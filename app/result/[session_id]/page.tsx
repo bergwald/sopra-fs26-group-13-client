@@ -12,11 +12,7 @@ import {
 } from "@/utils/auth";
 import dynamic from "next/dynamic";
 import { readSinglePlayerRoundResult } from "@/utils/singleplayerResult";
-import {
-  ArrowRight,
-  Trophy,
-  UserCircle,
-} from "lucide-react";
+import { ArrowRight, Trophy, UserCircle } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 
@@ -209,7 +205,6 @@ const ResultPage: React.FC = () => {
   const navMascotImage = currentMascotId
     ? MASCOT_IMAGES[currentMascotId] ?? MASCOT_IMAGES[1]
     : undefined;
-  
 
   return (
     <div className="result-page-root">
@@ -260,7 +255,9 @@ const ResultPage: React.FC = () => {
                   <Trophy className="result-trophy-inline-icon" />
                 </span>
               </span>
-              {isFinished ? "Final Results" : `Round ${completedRoundNumber} Results`}
+              {isFinished
+                ? "Final Results"
+                : `Round ${completedRoundNumber} Results`}
             </h1>
           </div>
 
@@ -296,7 +293,9 @@ const ResultPage: React.FC = () => {
                 <strong className="result-stat-value result-stat-value-round">
                   {roundResult ? `+${roundResult.scoreRound}` : "Unavailable"}
                 </strong>
-                {roundResult ? <span className="result-stat-unit">pts</span> : null}
+                {roundResult
+                  ? <span className="result-stat-unit">pts</span>
+                  : null}
               </div>
             </div>
 
@@ -354,9 +353,9 @@ const ResultPage: React.FC = () => {
             </button>
           </div>
 
-          {errorMessage ? (
-            <p className="result-feedback-text">{errorMessage}</p>
-          ) : null}
+          {errorMessage
+            ? <p className="result-feedback-text">{errorMessage}</p>
+            : null}
         </section>
       </main>
 
