@@ -572,6 +572,15 @@ a {
   line-height: 1.7;
 }
 
+.home-hero-question {
+  color: #334155;
+  font-weight: 600;
+}
+
+.home-hero-text + .home-hero-text {
+  margin-top: 4px;
+}
+
 .home-play-grid {
   position: relative;
   z-index: 1;
