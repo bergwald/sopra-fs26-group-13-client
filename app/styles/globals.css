@@ -544,7 +544,6 @@ a {
 .home-hero-copy {
   position: relative;
   z-index: 1;
-  max-width: 40rem;
   margin-bottom: 28px;
 }
 
