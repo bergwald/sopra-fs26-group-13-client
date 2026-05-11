@@ -498,7 +498,7 @@ a {
   flex-direction: column;
   gap: 36px;
   width: 100%;
-  max-width: 72rem;
+  max-width: 60rem;
   margin: 0 auto;
   padding: 48px 24px 56px;
 }
