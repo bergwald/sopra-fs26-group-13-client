@@ -429,7 +429,7 @@ const HomePage: React.FC = () => {
         <div className="login-page-nav-left">
           <Link href="/" className="login-page-brand">
             <div className="login-page-brand-icon" aria-hidden="true">
-              G
+              ⛰️
             </div>
             <span className="login-page-brand-text">MountainGuessr</span>
           </Link>
@@ -462,7 +462,14 @@ const HomePage: React.FC = () => {
 
           <div className="home-hero-copy">
             <p className="home-hero-eyebrow">Ready To Play</p>
-            <h1 className="home-hero-title">Jump into the next geography round</h1>
+            <h1 className="home-hero-title">
+              Altitude: +1200 meters.
+              <br />
+              Location: unknown.
+            </h1>
+            <p className="home-hero-text home-hero-question">
+              Where in the mountains are you?
+            </p>
             <p className="home-hero-text">
               Start a solo session, create a multiplayer lobby, or join an
               existing room with a session ID.

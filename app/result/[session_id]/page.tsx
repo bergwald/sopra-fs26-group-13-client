@@ -12,11 +12,7 @@ import {
 } from "@/utils/auth";
 import dynamic from "next/dynamic";
 import { readSinglePlayerRoundResult } from "@/utils/singleplayerResult";
-import {
-  ArrowRight,
-  Trophy,
-  UserCircle,
-} from "lucide-react";
+import { ArrowRight, Trophy, UserCircle } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 
@@ -38,7 +34,23 @@ const buildAuthorizedHeaders = (token: string, userId: number): HeadersInit => {
   };
 };
 
-const ResultLeafletMap = dynamic(() => import("./ResultLeafletMap"), { ssr: false });
+const ResultLeafletMap = dynamic(() => import("./ResultLeafletMap"), {
+  ssr: false,
+});
+
+const isValidCoordinatePair = (
+  latitude: number | undefined,
+  longitude: number | undefined,
+): boolean => {
+  return latitude !== undefined &&
+    longitude !== undefined &&
+    Number.isFinite(latitude) &&
+    Number.isFinite(longitude) &&
+    latitude >= -90 &&
+    latitude <= 90 &&
+    longitude >= -180 &&
+    longitude <= 180;
+};
 
 const ResultPage: React.FC = () => {
   const apiService = useApi();
@@ -174,10 +186,25 @@ const ResultPage: React.FC = () => {
   }
 
   const displayScoreOverall = roundResult?.scoreOverall ?? sessionUser.score;
+  const userGuessCoordinates: [number, number] | null = roundResult &&
+      roundResult.distance >= 0 &&
+      isValidCoordinatePair(
+        roundResult.guessLatitude,
+        roundResult.guessLongitude,
+      )
+    ? [roundResult.guessLatitude, roundResult.guessLongitude]
+    : null;
+  const hasSubmittedGuess = userGuessCoordinates !== null;
+  const correctCoordinates: [number, number] | null = roundResult &&
+      isValidCoordinatePair(roundResult.latitude, roundResult.longitude)
+    ? [roundResult.latitude, roundResult.longitude]
+    : null;
+  const displayDistance = roundResult && hasSubmittedGuess
+    ? roundResult.distance.toFixed(2)
+    : "No guess";
   const navMascotImage = currentMascotId
     ? MASCOT_IMAGES[currentMascotId] ?? MASCOT_IMAGES[1]
     : undefined;
-  
 
   return (
     <div className="result-page-root">
@@ -190,7 +217,7 @@ const ResultPage: React.FC = () => {
         <div className="login-page-nav-left">
           <Link href="/" className="login-page-brand">
             <div className="login-page-brand-icon" aria-hidden="true">
-              G
+              ⛰️
             </div>
             <span className="login-page-brand-text">MountainGuessr</span>
           </Link>
@@ -228,7 +255,9 @@ const ResultPage: React.FC = () => {
                   <Trophy className="result-trophy-inline-icon" />
                 </span>
               </span>
-              {isFinished ? "Final Results" : `Round ${completedRoundNumber} Results`}
+              {isFinished
+                ? "Final Results"
+                : `Round ${completedRoundNumber} Results`}
             </h1>
           </div>
 
@@ -236,8 +265,8 @@ const ResultPage: React.FC = () => {
             <div className="result-map-frame">
               <ResultLeafletMap
                 worldBounds={worldBounds}
-                correctCoordinates={[roundResult?.latitude ?? -88, roundResult?.longitude ?? 180]}
-                userGuessCoordinates={[roundResult?.guessLatitude ?? -88, roundResult?.guessLongitude ?? 180]}
+                correctCoordinates={correctCoordinates}
+                userGuessCoordinates={userGuessCoordinates}
                 onMapReady={(mapInstance) => {
                   leafletMapRef.current = mapInstance;
                 }}
@@ -250,9 +279,11 @@ const ResultPage: React.FC = () => {
               <span className="result-stat-label">Distance</span>
               <div className="result-stat-row">
                 <strong className="result-stat-value">
-                  {roundResult ? roundResult.distance.toFixed(2) : "Unavailable"}
+                  {displayDistance}
                 </strong>
-                {roundResult ? <span className="result-stat-unit">km</span> : null}
+                {roundResult && hasSubmittedGuess
+                  ? <span className="result-stat-unit">km</span>
+                  : null}
               </div>
             </div>
 
@@ -262,7 +293,9 @@ const ResultPage: React.FC = () => {
                 <strong className="result-stat-value result-stat-value-round">
                   {roundResult ? `+${roundResult.scoreRound}` : "Unavailable"}
                 </strong>
-                {roundResult ? <span className="result-stat-unit">pts</span> : null}
+                {roundResult
+                  ? <span className="result-stat-unit">pts</span>
+                  : null}
               </div>
             </div>
 
@@ -320,9 +353,9 @@ const ResultPage: React.FC = () => {
             </button>
           </div>
 
-          {errorMessage ? (
-            <p className="result-feedback-text">{errorMessage}</p>
-          ) : null}
+          {errorMessage
+            ? <p className="result-feedback-text">{errorMessage}</p>
+            : null}
         </section>
       </main>
 
