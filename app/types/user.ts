@@ -6,7 +6,7 @@ export interface User {
   mascot_id?: number | null;
   rounds_played?: number | null;
   avg_distance?: number | null;
-  avg_score?: number | null;
+  score?: number | null;
 }
 
 export interface AuthResponse {
