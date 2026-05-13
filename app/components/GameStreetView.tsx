@@ -263,7 +263,6 @@ const GameStreetViewComponent: React.FC<GameStreetViewProps> = ({
   React.useEffect(() => {
     let isCancelled = false;
     let hasStreetViewImageryLoadError = false;
-    let hasObservedStreetViewImageryRequest = false;
     let handleResourceError: ((event: Event) => void) | null = null;
     let resourceTimingObserver: PerformanceObserver | null = null;
     let streetViewContainer: HTMLDivElement | null = null;
@@ -321,7 +320,6 @@ const GameStreetViewComponent: React.FC<GameStreetViewProps> = ({
           return;
         }
 
-        hasObservedStreetViewImageryRequest = true;
         surfaceStreetViewImageryLoadError();
       };
       document.addEventListener("error", handleResourceError, true);
@@ -330,12 +328,6 @@ const GameStreetViewComponent: React.FC<GameStreetViewProps> = ({
       if ("PerformanceObserver" in globalThis) {
         resourceTimingObserver = new PerformanceObserver((list) => {
           const resourceEntries = list.getEntries();
-
-          if (resourceEntries.some((entry) => {
-            return isGoogleStreetViewImageryUrl(entry.name);
-          })) {
-            hasObservedStreetViewImageryRequest = true;
-          }
 
           if (resourceEntries.some(isFailedStreetViewResourceTiming)) {
             surfaceStreetViewImageryLoadError();
@@ -459,13 +451,11 @@ const GameStreetViewComponent: React.FC<GameStreetViewProps> = ({
 
         imageryRenderWatchdogId = globalThis.setTimeout(() => {
           const googleImageryImages = getStreetViewImageryImages(container);
-          const hasStreetViewImageryEvidence =
-            hasObservedStreetViewImageryRequest || googleImageryImages.length > 0;
 
           if (
             !isCancelled &&
             !hasStreetViewImageryLoadError &&
-            hasStreetViewImageryEvidence &&
+            googleImageryImages.length > 0 &&
             !hasLoadedStreetViewImagery(googleImageryImages)
           ) {
             surfaceStreetViewImageryLoadError();
