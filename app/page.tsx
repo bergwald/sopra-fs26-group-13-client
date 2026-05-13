@@ -2,6 +2,7 @@
 
 import { useApi } from "@/hooks/useApi";
 import type { ApplicationError } from "@/types/error";
+import type { User } from "@/types/user";
 import {
   getStoredCurrentMascotId,
   getStoredCurrentUserId,
@@ -25,11 +26,7 @@ import React from "react";
 type LeaderboardUser = {
   id: number;
   username: string;
-  bio: string;
-  creation_date: string;
   score: number;
-  game_count: number;
-  win_rate: number;
   average_distance: number;
   mascot_id: number;
 };
@@ -43,122 +40,27 @@ const MASCOT_IMAGES: Record<number, string> = {
   6: "/mascots/snowman-scarf.svg",
 };
 
-const DEFAULT_LEADERBOARD_USERS: LeaderboardUser[] = [
-  {
-    id: 11,
-    username: "AtlasAce",
-    score: 3580,
-    creation_date: "2026-01-01T00:00:00.000Z",
-    bio: "",
-    game_count: 0,
-    win_rate: 0,
-    average_distance: 12.4,
-    mascot_id: 1,
-  },
-  {
-    id: 12,
-    username: "MapMarauder",
-    score: 3440,
-    creation_date: "2026-01-01T00:00:00.000Z",
-    bio: "",
-    game_count: 0,
-    win_rate: 0,
-    average_distance: 14.1,
-    mascot_id: 2,
-  },
-  {
-    id: 13,
-    username: "GeoSprint",
-    score: 3375,
-    creation_date: "2026-01-01T00:00:00.000Z",
-    bio: "",
-    game_count: 0,
-    win_rate: 0,
-    average_distance: 16.8,
-    mascot_id: 3,
-  },
-  {
-    id: 14,
-    username: "RoadSignWhisperer",
-    score: 3290,
-    creation_date: "2026-01-01T00:00:00.000Z",
-    bio: "",
-    game_count: 0,
-    win_rate: 0,
-    average_distance: 18.2,
-    mascot_id: 4,
-  },
-  {
-    id: 15,
-    username: "PeakPin",
-    score: 3210,
-    creation_date: "2026-01-01T00:00:00.000Z",
-    bio: "",
-    game_count: 0,
-    win_rate: 0,
-    average_distance: 19.3,
-    mascot_id: 2,
-  },
-  {
-    id: 16,
-    username: "BorderBlink",
-    score: 3155,
-    creation_date: "2026-01-01T00:00:00.000Z",
-    bio: "",
-    game_count: 0,
-    win_rate: 0,
-    average_distance: 21.4,
-    mascot_id: 1,
-  },
-  {
-    id: 17,
-    username: "CompassCloud",
-    score: 3080,
-    creation_date: "2026-01-01T00:00:00.000Z",
-    bio: "",
-    game_count: 0,
-    win_rate: 0,
-    average_distance: 22.9,
-    mascot_id: 3,
-  },
-  {
-    id: 18,
-    username: "UrbanContour",
-    score: 2995,
-    creation_date: "2026-01-01T00:00:00.000Z",
-    bio: "",
-    game_count: 0,
-    win_rate: 0,
-    average_distance: 24.7,
-    mascot_id: 4,
-  },
-  {
-    id: 19,
-    username: "LongitudeLoop",
-    score: 2910,
-    creation_date: "2026-01-01T00:00:00.000Z",
-    bio: "",
-    game_count: 0,
-    win_rate: 0,
-    average_distance: 26.1,
-    mascot_id: 2,
-  },
-  {
-    id: 20,
-    username: "TrailLens",
-    score: 2840,
-    creation_date: "2026-01-01T00:00:00.000Z",
-    bio: "",
-    game_count: 0,
-    win_rate: 0,
-    average_distance: 28.6,
-    mascot_id: 1,
-  },
-];
+const mapUserToLeaderboardUser = (user: User): LeaderboardUser => ({
+  id: user.id,
+  username: user.username,
+  score: user.score ?? 0,
+  average_distance: user.avg_distance ?? 0,
+  mascot_id: user.mascot_id ?? 1,
+});
 
 const sortLeaderboardUsers = (users: LeaderboardUser[]): LeaderboardUser[] => {
   return [...users]
-    .sort((firstUser, secondUser) => secondUser.score - firstUser.score)
+    .sort((firstUser, secondUser) => {
+      if (secondUser.score !== firstUser.score) {
+        return secondUser.score - firstUser.score;
+      }
+
+      if (firstUser.average_distance !== secondUser.average_distance) {
+        return firstUser.average_distance - secondUser.average_distance;
+      }
+
+      return firstUser.username.localeCompare(secondUser.username);
+    })
     .slice(0, 10);
 };
 
@@ -177,50 +79,26 @@ const HomePage: React.FC = () => {
   const apiService = useApi();
   const [currentUserId, setCurrentUserId] = React.useState<number | null>(null);
   const [currentMascotId, setCurrentMascotId] = React.useState<number | null>(null);
-  const [leaderboardUsers, setLeaderboardUsers] = React.useState<LeaderboardUser[]>(
-    sortLeaderboardUsers(DEFAULT_LEADERBOARD_USERS),
-  );
+  const [leaderboardUsers, setLeaderboardUsers] = React.useState<LeaderboardUser[]>([]);
   const [isMultiplayerOpen, setIsMultiplayerOpen] = React.useState<boolean>(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = React.useState<boolean>(false);
   const [sessionIdInput, setSessionIdInput] = React.useState<string>("");
   const [pendingHomeAction, setPendingHomeAction] = React.useState<PendingHomeAction>(null);
 
   React.useEffect(() => {
-    const token = getStoredToken();
     const storedCurrentUserId = getStoredCurrentUserId();
     const storedCurrentMascotId = getStoredCurrentMascotId();
 
     setCurrentUserId(storedCurrentUserId);
     setCurrentMascotId(storedCurrentMascotId);
 
-    const loadLeaderboard = () => {
+    const loadLeaderboard = async () => {
       try {
-        // This follows the same `/users` API shape your old overview page used.
-        // Once the backend returns the top 10 directly, you can remove the sort/slice.
-        // const fetchedUsers = await apiService.get<LeaderboardUser[]>("/users", {
-        //   Authorization: `Bearer ${token}`,
-        // });
-        //
-        // setLeaderboardUsers(
-        //   sortLeaderboardUsers(
-        //     fetchedUsers.map((user) => ({
-        //       ...user,
-        //       mascot_id: user.mascot_id ?? 1,
-        //     })),
-        //   ),
-        // );
-
-        void token;
-        setLeaderboardUsers(sortLeaderboardUsers(DEFAULT_LEADERBOARD_USERS));
+        const fetchedUsers = await apiService.get<User[]>("/users");
+        setLeaderboardUsers(
+          sortLeaderboardUsers(fetchedUsers.map(mapUserToLeaderboardUser)),
+        );
       } catch (error) {
-        // const appError = error as ApplicationError;
-        //
-        // if (appError.status === 401) {
-        //   clearStoredAuth();
-        //   router.replace("/");
-        //   return;
-        // }
-
         if (error instanceof Error) {
           alert(`Something went wrong while loading the leaderboard:\n${error.message}`);
         } else {
@@ -229,8 +107,8 @@ const HomePage: React.FC = () => {
       }
     };
 
-    loadLeaderboard();
-  }, []);
+    void loadLeaderboard();
+  }, [apiService]);
 
   const navProfileImage = currentMascotId
     ? MASCOT_IMAGES[currentMascotId] ?? MASCOT_IMAGES[1]
@@ -572,11 +450,22 @@ const HomePage: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
+                {leaderboardUsers.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="home-leaderboard-empty">
+                      No players so far... Maybe they got lost in the mountains.
+                    </td>
+                  </tr>
+                )}
                 {leaderboardUsers.map((leaderboardUser, index) => {
                   const mascotImage = MASCOT_IMAGES[leaderboardUser.mascot_id] ?? MASCOT_IMAGES[1];
+                  const isCurrentUser = isLoggedIn && leaderboardUser.id === currentUserId;
 
                   return (
-                    <tr key={leaderboardUser.id}>
+                    <tr
+                      key={leaderboardUser.id}
+                      className={isCurrentUser ? "home-leaderboard-row-current" : undefined}
+                    >
                       <td>
                         <span
                           className={`home-rank-badge ${
@@ -595,7 +484,7 @@ const HomePage: React.FC = () => {
                       <td>
                         <Link
                           href={`/users/${leaderboardUser.id}`}
-                          className="home-player-link"
+                          className={`home-player-link ${isCurrentUser ? "home-player-link-current" : ""}`}
                         >
                           <span className="home-player-avatar">
                             <img
@@ -604,7 +493,9 @@ const HomePage: React.FC = () => {
                               className="home-player-avatar-image"
                             />
                           </span>
-                          <span className="home-player-name">{leaderboardUser.username}</span>
+                          <span className={`home-player-name ${isCurrentUser ? "home-player-name-current" : ""}`}>
+                            {leaderboardUser.username}
+                          </span>
                         </Link>
                       </td>
                       <td className="home-score-cell">{formatScore(leaderboardUser.score)}</td>

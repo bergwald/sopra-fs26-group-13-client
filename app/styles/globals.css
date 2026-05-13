@@ -881,6 +881,14 @@ a {
   background: rgba(255, 255, 255, 0.5);
 }
 
+.home-leaderboard-row-current {
+  background: rgba(219, 234, 254, 0.55);
+}
+
+.home-leaderboard-row-current:hover {
+  background: rgba(191, 219, 254, 0.65);
+}
+
 .home-leaderboard-table tbody tr:last-child {
   border-bottom: none;
 }
@@ -908,6 +916,11 @@ a {
   gap: 14px;
 }
 
+.home-player-link-current .home-player-avatar {
+  border-color: rgba(37, 99, 235, 0.35);
+  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.14);
+}
+
 .home-player-avatar {
   display: inline-flex;
   width: 42px;
@@ -933,8 +946,18 @@ a {
   transition: color 0.2s ease;
 }
 
+.home-player-name-current {
+  color: #1d4ed8;
+}
+
 .home-player-link:hover .home-player-name {
   color: #2563eb;
+}
+
+.home-leaderboard-empty {
+  color: #64748b;
+  font-style: italic;
+  text-align: center !important;
 }
 
 .home-score-cell {
