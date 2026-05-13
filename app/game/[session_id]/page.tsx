@@ -33,7 +33,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 
 const TOTAL_ROUNDS = 3;
-const ROUND_LENGTH_MS = 30_000;
+const ROUND_LENGTH_MS = 60_000;
 
 const MASCOT_IMAGES: Record<number, string> = {
   1: "/mascots/earth-sunglasses.svg",
