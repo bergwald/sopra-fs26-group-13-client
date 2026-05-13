@@ -132,8 +132,9 @@ const UserSettingsPage: React.FC = () => {
     }
 
     const token = getStoredToken();
+    const storedCurrentMascotId = getStoredCurrentMascotId();
 
-    if (!token) {
+    if (!token || !storedCurrentMascotId) {
       clearStoredAuth();
       router.replace(`/users/${currentUserId}`);
       return;

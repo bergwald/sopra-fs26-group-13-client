@@ -4,6 +4,7 @@ import React from "react";
 import { useApi } from "@/hooks/useApi";
 import type { LeafletMapLike } from "./ResultLeafletMap";
 import "leaflet/dist/leaflet.css";
+import type { ApplicationError } from "@/types/error";
 import type { BackendSessionUserDetails, GameRoundResult } from "@/types/user";
 import {
   getStoredCurrentMascotId,
@@ -90,7 +91,7 @@ const ResultPage: React.FC = () => {
       setErrorMessage("");
 
       if (!token || !storedCurrentUserId || !storedCurrentMascotId) {
-        router.replace("/login");
+        router.replace("/");
         return;
       }
 
@@ -123,7 +124,13 @@ const ResultPage: React.FC = () => {
         setSessionUser(currentSessionUser);
         setRoundResult(readSinglePlayerRoundResult(sessionId, resolvedRoundNumber));
       } catch (error) {
-                console.log("Error while showing result page ", error);
+        const appError = error as ApplicationError;
+        if (appError.status === 401 || appError.status === 403 || appError.status === 404) {
+          router.replace("/");
+          return;
+        }
+
+        console.log("Error while showing result page ", error);
       } finally {
         setIsLoading(false);
       }
@@ -152,8 +159,12 @@ const ResultPage: React.FC = () => {
       try {
         const token = getStoredToken();
         const storedCurrentUserId = getStoredCurrentUserId();
+        const storedCurrentMascotId = getStoredCurrentMascotId();
 
-        if (!token || !storedCurrentUserId || !sessionId) return;
+        if (!token || !storedCurrentUserId || !storedCurrentMascotId || !sessionId) {
+          router.replace("/");
+          return;
+        }
 
         const headers = buildAuthorizedHeaders(token, storedCurrentUserId);
         const sessionUsers = await apiService.get<BackendSessionUserDetails[]>(
@@ -328,9 +339,10 @@ const ResultPage: React.FC = () => {
                 try {
                   const token = getStoredToken();
                   const storedCurrentUserId = getStoredCurrentUserId();
+                  const storedCurrentMascotId = getStoredCurrentMascotId();
 
-                  if (!token || !storedCurrentUserId || !sessionId) {
-                    router.replace("/login");
+                  if (!token || !storedCurrentUserId || !storedCurrentMascotId || !sessionId) {
+                    router.replace("/");
                     return;
                   }
 
@@ -344,6 +356,12 @@ const ResultPage: React.FC = () => {
 
                   router.push(`/game/${sessionId}`);
                 } catch (error) {
+                  const appError = error as ApplicationError;
+                  if (appError.status === 401 || appError.status === 403 || appError.status === 404) {
+                    router.replace("/");
+                    return;
+                  }
+
                   console.log("Error while navigating from result page ", error);
                 }
               }}

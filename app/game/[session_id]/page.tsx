@@ -165,7 +165,7 @@ const GamePage: React.FC = () => {
     setErrorMessage("");
 
     if (!token || !storedCurrentUserId || !storedCurrentMascotId) {
-      router.replace("/login");
+      router.replace("/");
       return;
     }
 
@@ -218,7 +218,7 @@ const GamePage: React.FC = () => {
       const appError = error as ApplicationError;
 
       if (appError.status === 401 || appError.status === 403) {
-        router.replace("/login");
+        router.replace("/");
         return;
       }
 
@@ -266,8 +266,10 @@ const GamePage: React.FC = () => {
 
   const handleSubmitGuess = async () => {
     const token = getStoredToken();
+    const storedCurrentMascotId = getStoredCurrentMascotId();
 
-    if (!currentUserId || !token) {
+    if (!currentUserId || !token || !storedCurrentMascotId) {
+      router.replace("/");
       return;
     }
 
@@ -307,7 +309,7 @@ const GamePage: React.FC = () => {
       setHasSubmittedGuess(false);
 
       if (appError.status === 401 || appError.status === 403) {
-        router.replace("/login");
+        router.replace("/");
         return;
       }
 

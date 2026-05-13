@@ -129,8 +129,9 @@ const HomePage: React.FC = () => {
     }
 
     const token = getStoredToken();
+    const storedCurrentMascotId = getStoredCurrentMascotId();
 
-    if (!token || !currentUserId) {
+    if (!token || !currentUserId || !storedCurrentMascotId) {
       router.push("/login");
       return;
     }
@@ -190,8 +191,9 @@ const HomePage: React.FC = () => {
       // Once the backend creates a room, send players into that lobby.
       // router.push(`/lobby/${response.session_id}`);
     const token = getStoredToken();
+    const storedCurrentMascotId = getStoredCurrentMascotId();
 
-    if (!token || !currentUserId) {
+    if (!token || !currentUserId || !storedCurrentMascotId) {
       router.push("/login");
       return;
     }
@@ -257,8 +259,9 @@ const HomePage: React.FC = () => {
       return;
     }
         const token = getStoredToken();
+    const storedCurrentMascotId = getStoredCurrentMascotId();
 
-    if (!token || !currentUserId) {
+    if (!token || !currentUserId || !storedCurrentMascotId) {
       router.push("/login");
       return;
     }
