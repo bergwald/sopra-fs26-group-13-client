@@ -191,27 +191,6 @@ function getStreetViewErrorMessage(status: string, unavailableStatus: string): s
   return "Google Street View could not render the selected panorama.";
 }
 
-function getResourceUrlFromEventTarget(target: EventTarget): string | null {
-  if (target instanceof HTMLImageElement) {
-    return target.currentSrc || target.src || null;
-  }
-
-  if (
-    target instanceof HTMLScriptElement ||
-    target instanceof HTMLIFrameElement ||
-    target instanceof HTMLSourceElement ||
-    target instanceof HTMLTrackElement
-  ) {
-    return target.src || null;
-  }
-
-  if (target instanceof HTMLLinkElement) {
-    return target.href || null;
-  }
-
-  return null;
-}
-
 function isGoogleStreetViewImageryHost(hostname: string): boolean {
   const normalizedHostname = hostname.toLowerCase();
   return normalizedHostname === "ggpht.com" ||
@@ -234,17 +213,11 @@ function isStreetViewImageryLoadError(
 ): boolean {
   const target = event.target;
 
-  if (!(target instanceof Node) || !container.contains(target)) {
+  if (!(target instanceof HTMLImageElement) || !container.contains(target)) {
     return false;
   }
 
-  const resourceUrl = getResourceUrlFromEventTarget(target);
-
-  if (!resourceUrl) {
-    return false;
-  }
-
-  return isGoogleStreetViewImageryUrl(resourceUrl);
+  return isGoogleStreetViewImageryUrl(target.currentSrc || target.src);
 }
 
 function isFailedStreetViewResourceTiming(
@@ -269,8 +242,8 @@ function getStreetViewImageryImages(container: HTMLElement): HTMLImageElement[] 
   });
 }
 
-function hasLoadedStreetViewImagery(container: HTMLElement): boolean {
-  return getStreetViewImageryImages(container).some((image) => {
+function hasLoadedStreetViewImagery(images: HTMLImageElement[]): boolean {
+  return images.some((image) => {
     return image.complete && image.naturalWidth > 0 && image.naturalHeight > 0;
   });
 }
@@ -493,7 +466,7 @@ const GameStreetViewComponent: React.FC<GameStreetViewProps> = ({
             !isCancelled &&
             !hasStreetViewImageryLoadError &&
             hasStreetViewImageryEvidence &&
-            !hasLoadedStreetViewImagery(container)
+            !hasLoadedStreetViewImagery(googleImageryImages)
           ) {
             surfaceStreetViewImageryLoadError();
           }
