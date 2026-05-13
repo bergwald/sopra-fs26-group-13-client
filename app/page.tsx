@@ -4,6 +4,7 @@ import { useApi } from "@/hooks/useApi";
 import type { ApplicationError } from "@/types/error";
 import type { User } from "@/types/user";
 import {
+  AUTH_TOKEN_CHANGED_EVENT,
   getStoredCurrentMascotId,
   getStoredCurrentUserId,
   getStoredToken,
@@ -86,11 +87,12 @@ const HomePage: React.FC = () => {
   const [pendingHomeAction, setPendingHomeAction] = React.useState<PendingHomeAction>(null);
 
   React.useEffect(() => {
-    const storedCurrentUserId = getStoredCurrentUserId();
-    const storedCurrentMascotId = getStoredCurrentMascotId();
+    const syncAuthState = () => {
+      setCurrentUserId(getStoredCurrentUserId());
+      setCurrentMascotId(getStoredCurrentMascotId());
+    };
 
-    setCurrentUserId(storedCurrentUserId);
-    setCurrentMascotId(storedCurrentMascotId);
+    syncAuthState();
 
     const loadLeaderboard = async () => {
       try {
@@ -108,6 +110,14 @@ const HomePage: React.FC = () => {
     };
 
     void loadLeaderboard();
+
+    globalThis.addEventListener("storage", syncAuthState);
+    globalThis.addEventListener(AUTH_TOKEN_CHANGED_EVENT, syncAuthState);
+
+    return () => {
+      globalThis.removeEventListener("storage", syncAuthState);
+      globalThis.removeEventListener(AUTH_TOKEN_CHANGED_EVENT, syncAuthState);
+    };
   }, [apiService]);
 
   const navProfileImage = currentMascotId
