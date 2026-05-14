@@ -125,7 +125,7 @@ const ResultPage: React.FC = () => {
         setRoundResult(readSinglePlayerRoundResult(sessionId, resolvedRoundNumber));
       } catch (error) {
         const appError = error as ApplicationError;
-        if (appError.status === 400 || appError.status === 401 || appError.status === 403 || appError.status === 404) {
+        if (appError.status === 401 || appError.status === 403 || appError.status === 404) {
           router.replace("/");
           return;
         }
@@ -179,7 +179,7 @@ const ResultPage: React.FC = () => {
         }
       } catch (error) {
         const appError = error as ApplicationError;
-        if (appError.status === 400 || appError.status === 401 || appError.status === 403 || appError.status === 404) {
+        if (appError.status === 401 || appError.status === 403 || appError.status === 404) {
           router.replace("/");
           return;
         }
@@ -363,7 +363,7 @@ const ResultPage: React.FC = () => {
                   router.push(`/game/${sessionId}`);
                 } catch (error) {
                   const appError = error as ApplicationError;
-                  if (appError.status === 400 || appError.status === 401 || appError.status === 403 || appError.status === 404) {
+                  if (appError.status === 401 || appError.status === 403 || appError.status === 404) {
                     router.replace("/");
                     return;
                   }

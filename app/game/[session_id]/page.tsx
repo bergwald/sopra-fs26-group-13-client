@@ -217,7 +217,7 @@ const GamePage: React.FC = () => {
     } catch (error) {
       const appError = error as ApplicationError;
 
-      if (appError.status === 400 || appError.status === 401 || appError.status === 403) {
+      if (appError.status === 401 || appError.status === 403) {
         router.replace("/");
         return;
       }
@@ -308,7 +308,7 @@ const GamePage: React.FC = () => {
       const appError = error as ApplicationError;
       setHasSubmittedGuess(false);
 
-      if (appError.status === 400 || appError.status === 401 || appError.status === 403) {
+      if (appError.status === 401 || appError.status === 403) {
         router.replace("/");
         return;
       }
