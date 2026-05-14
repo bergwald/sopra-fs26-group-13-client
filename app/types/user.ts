@@ -73,6 +73,9 @@ export interface GameResult {
 
 export interface BackendSessionUserDetails {
   id: number;
+  sessionId: string;
+  sessionExpiryDateTime: string;
+  roundStartedDateTime: string;
   username: string;
   userRole: string;
   roundNumber: number;
