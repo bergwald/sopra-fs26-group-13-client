@@ -4,11 +4,7 @@ import { useApi } from "@/hooks/useApi";
 import useRedirectIfAuthenticated from "@/hooks/useRedirectIfAuthenticated";
 import type { ApplicationError } from "@/types/error";
 import type { AuthResponse, LoginRequest } from "@/types/user";
-import {
-  setStoredCurrentMascotId,
-  setStoredCurrentUserId,
-  setStoredToken,
-} from "@/utils/auth";
+import { setStoredAuth } from "@/utils/auth";
 import { Alert, ConfigProvider, Form, Input } from "antd";
 import { LogIn } from "lucide-react";
 import Link from "next/link";
@@ -33,9 +29,7 @@ const LoginPage: React.FC = () => {
         password: loginValues.password,
       });
 
-      setStoredToken(response.token);
-      setStoredCurrentUserId(response.id);
-      setStoredCurrentMascotId(response.mascot_id ?? 1);
+      setStoredAuth(response.token, response.id, response.mascot_id ?? 1);
       router.push(`/users/${response.id}`);
     } catch (error) {
       const appError = error as ApplicationError;
@@ -64,7 +58,7 @@ const LoginPage: React.FC = () => {
         <div className="login-page-nav-left">
           <Link href="/" className="login-page-brand">
             <div className="login-page-brand-icon" aria-hidden="true">
-              G
+              ⛰️
             </div>
             <span className="login-page-brand-text">MountainGuessr</span>
           </Link>

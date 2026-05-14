@@ -1,7 +1,15 @@
+import type { User } from "@/types/user";
+import { getApiDomain } from "@/utils/domain";
+
 const AUTH_TOKEN_STORAGE_KEY = "token";
 const AUTH_CURRENT_USER_ID_STORAGE_KEY = "currentUserId";
 const AUTH_CURRENT_MASCOT_ID_STORAGE_KEY = "currentMascotId";
 export const AUTH_TOKEN_CHANGED_EVENT = "auth-token-changed";
+
+export type AuthValidationResult =
+  | { status: "authenticated"; userId: number }
+  | { status: "unauthenticated" }
+  | { status: "unknown" };
 
 function emitAuthTokenChanged(): void {
   if (typeof window === "undefined") {
@@ -193,6 +201,41 @@ export function setStoredToken(token: string): void {
   emitAuthTokenChanged();
 }
 
+export function setStoredAuth(
+  token: string,
+  currentUserId: number,
+  currentMascotId: number,
+): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (
+    token.trim().length === 0 ||
+    !Number.isInteger(currentUserId) ||
+    currentUserId <= 0 ||
+    !Number.isInteger(currentMascotId) ||
+    currentMascotId <= 0
+  ) {
+    clearStoredAuth();
+    return;
+  }
+
+  globalThis.localStorage.setItem(
+    AUTH_TOKEN_STORAGE_KEY,
+    JSON.stringify(token),
+  );
+  globalThis.localStorage.setItem(
+    AUTH_CURRENT_USER_ID_STORAGE_KEY,
+    JSON.stringify(currentUserId),
+  );
+  globalThis.localStorage.setItem(
+    AUTH_CURRENT_MASCOT_ID_STORAGE_KEY,
+    JSON.stringify(currentMascotId),
+  );
+  emitAuthTokenChanged();
+}
+
 export function clearStoredToken(): void {
   if (typeof window === "undefined") {
     return;
@@ -215,4 +258,62 @@ export function clearStoredAuth(): void {
   globalThis.localStorage.removeItem(AUTH_CURRENT_USER_ID_STORAGE_KEY);
   globalThis.localStorage.removeItem(AUTH_CURRENT_MASCOT_ID_STORAGE_KEY);
   emitAuthTokenChanged();
+}
+
+export async function validateStoredAuth(): Promise<AuthValidationResult> {
+  const token = getStoredToken();
+  const currentUserId = getStoredCurrentUserId();
+  const currentMascotId = getStoredCurrentMascotId();
+
+  if (!token || !currentUserId) {
+    if (token || currentUserId || currentMascotId) {
+      clearStoredAuth();
+    }
+    return { status: "unauthenticated" };
+  }
+
+  try {
+    const response = await fetch(`${getApiDomain()}/auth/validate`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (response.status === 401 || response.status === 404) {
+      clearStoredAuth();
+      return { status: "unauthenticated" };
+    }
+
+    if (!response.ok) {
+      return { status: "unknown" };
+    }
+
+    const authenticatedUser = (await response.json()) as Pick<
+      User,
+      "id" | "mascot_id"
+    >;
+
+    if (
+      !Number.isInteger(authenticatedUser.id) ||
+      authenticatedUser.id <= 0
+    ) {
+      return { status: "unknown" };
+    }
+
+    const mascotId = authenticatedUser.mascot_id ?? 1;
+
+    if (authenticatedUser.id !== currentUserId) {
+      setStoredCurrentUserId(authenticatedUser.id);
+    }
+
+    if (mascotId !== currentMascotId) {
+      setStoredCurrentMascotId(mascotId);
+    }
+
+    return { status: "authenticated", userId: authenticatedUser.id };
+  } catch {
+    return { status: "unknown" };
+  }
 }

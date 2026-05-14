@@ -1,12 +1,7 @@
 "use client";
 
 import React from "react";
-import {
-  CircleMarker,
-  MapContainer,
-  Popup,
-  TileLayer,
-} from "react-leaflet";
+import { CircleMarker, MapContainer, TileLayer, Popup } from "react-leaflet";
 
 export type LeafletMapLike = {
   fitBounds: (bounds: [[number, number], [number, number]]) => void;
@@ -14,8 +9,8 @@ export type LeafletMapLike = {
 };
 
 type GuessCoordinate = {
-  lat: number;
-  lng: number;
+  lat: number | null;
+  lng: number | null;
   id: number;
   username: string;
   role: string;
@@ -23,9 +18,8 @@ type GuessCoordinate = {
 
 type ResultLeafletMapProps = {
   worldBounds: [[number, number], [number, number]];
-  correctCoordinates: [number, number];
+  correctCoordinates: [number, number]|null;
 
-  // 👇 NEW
   allGuessCoordinates: GuessCoordinate[];
 
   onMapReady: (mapInstance: LeafletMapLike) => void;
@@ -69,22 +63,20 @@ const ResultLeafletMap: React.FC<ResultLeafletMapProps> = ({
       </CircleMarker>
 
       {/* All player guesses */}
-      {allGuessCoordinates.map((guess) => (
-        <CircleMarker
-          key={guess.id}
-          center={[guess.lat, guess.lng]}
-          pathOptions={{
-            color: guess.role === "OWNER" ? "#ffd700" : "#e60991",
-            fillColor: guess.role === "OWNER" ? "#ffd700" : "#e60991",
-            fillOpacity: 0.9,
-            weight: 2,
-          }}
-        >
-          <Popup>
-            {guess.username}
-          </Popup>
-        </CircleMarker>
-      ))}
+      {allGuessCoordinates?.map((guess) =>
+          guess.lat != null && guess.lng != null ? (
+      <CircleMarker
+        key={guess.id}
+        center={[guess.lat, guess.lng]}
+        pathOptions={{
+        color: "#e60991",
+        fillColor: "#e60991",
+        fillOpacity: 0.9,
+        weight: 2,
+      }}
+    />
+  ) : null
+      )}
     </MapContainer>
   );
 };

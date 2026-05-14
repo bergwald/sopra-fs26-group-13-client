@@ -82,6 +82,9 @@ interface StreetViewLibrary {
 
 const GOOGLE_MAPS_CALLBACK = "__initGameStreetViewGoogleMaps";
 const GOOGLE_MAPS_SCRIPT_SELECTOR = 'script[data-google-maps-loader="game-street-view"]';
+const GOOGLE_STREET_VIEW_IMAGERY_ERROR_MESSAGE =
+  "Google Street View imagery could not be loaded. Google may be rate limiting the panorama tiles. Please try again later.";
+const STREET_VIEW_IMAGERY_RENDER_GRACE_PERIOD_MS = 5000;
 
 let googleMapsApiPromise: Promise<GoogleMapsApi> | null = null;
 
@@ -188,6 +191,63 @@ function getStreetViewErrorMessage(status: string, unavailableStatus: string): s
   return "Google Street View could not render the selected panorama.";
 }
 
+function isGoogleStreetViewImageryHost(hostname: string): boolean {
+  const normalizedHostname = hostname.toLowerCase();
+  return normalizedHostname === "ggpht.com" ||
+    normalizedHostname.endsWith(".ggpht.com");
+}
+
+function isGoogleStreetViewImageryUrl(resourceUrl: string): boolean {
+  try {
+    return isGoogleStreetViewImageryHost(
+      new URL(resourceUrl, globalThis.location.href).hostname,
+    );
+  } catch {
+    return false;
+  }
+}
+
+function isStreetViewImageryLoadError(
+  event: Event,
+  container: HTMLElement,
+): boolean {
+  const target = event.target;
+
+  if (!(target instanceof HTMLImageElement) || !container.contains(target)) {
+    return false;
+  }
+
+  return isGoogleStreetViewImageryUrl(target.currentSrc || target.src);
+}
+
+function isFailedStreetViewResourceTiming(
+  entry: PerformanceEntry,
+): boolean {
+  if (!(entry instanceof PerformanceResourceTiming)) {
+    return false;
+  }
+
+  const responseStatus = (entry as PerformanceResourceTiming & {
+    responseStatus?: number;
+  }).responseStatus;
+
+  return isGoogleStreetViewImageryUrl(entry.name) &&
+    typeof responseStatus === "number" &&
+    responseStatus >= 400;
+}
+
+function getStreetViewImageryImages(container: HTMLElement): HTMLImageElement[] {
+  return Array.from(container.querySelectorAll("img")).filter((image) => {
+    return isGoogleStreetViewImageryUrl(image.currentSrc || image.src);
+  });
+}
+
+function hasLoadedStreetViewImagery(images: HTMLImageElement[]): boolean {
+  return images.some((image) => {
+    return image.complete && image.naturalWidth > 0 && image.naturalHeight > 0;
+  });
+}
+
 const GameStreetViewComponent: React.FC<GameStreetViewProps> = ({
   panoramaId,
 }) => {
@@ -202,6 +262,11 @@ const GameStreetViewComponent: React.FC<GameStreetViewProps> = ({
 
   React.useEffect(() => {
     let isCancelled = false;
+    let hasStreetViewImageryLoadError = false;
+    let handleResourceError: ((event: Event) => void) | null = null;
+    let resourceTimingObserver: PerformanceObserver | null = null;
+    let streetViewContainer: HTMLDivElement | null = null;
+    let imageryRenderWatchdogId: ReturnType<typeof globalThis.setTimeout> | null = null;
 
     const initializeStreetView = async () => {
       const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_API_KEY;
@@ -229,6 +294,49 @@ const GameStreetViewComponent: React.FC<GameStreetViewProps> = ({
 
       if (!container) {
         return;
+      }
+
+      streetViewContainer = container;
+
+      const surfaceStreetViewImageryLoadError = () => {
+        if (isCancelled || hasStreetViewImageryLoadError) {
+          return;
+        }
+
+        hasStreetViewImageryLoadError = true;
+        setState({
+          kind: "error",
+          title: "Street View unavailable",
+          message: GOOGLE_STREET_VIEW_IMAGERY_ERROR_MESSAGE,
+        });
+      };
+
+      handleResourceError = (event: Event) => {
+        if (
+          isCancelled ||
+          hasStreetViewImageryLoadError ||
+          !isStreetViewImageryLoadError(event, container)
+        ) {
+          return;
+        }
+
+        surfaceStreetViewImageryLoadError();
+      };
+      document.addEventListener("error", handleResourceError, true);
+      globalThis.addEventListener("error", handleResourceError, true);
+
+      if ("PerformanceObserver" in globalThis) {
+        resourceTimingObserver = new PerformanceObserver((list) => {
+          const resourceEntries = list.getEntries();
+
+          if (resourceEntries.some(isFailedStreetViewResourceTiming)) {
+            surfaceStreetViewImageryLoadError();
+          }
+        });
+        resourceTimingObserver.observe({
+          type: "resource",
+          buffered: true,
+        });
       }
 
       try {
@@ -335,9 +443,26 @@ const GameStreetViewComponent: React.FC<GameStreetViewProps> = ({
           return;
         }
 
+        if (hasStreetViewImageryLoadError) {
+          return;
+        }
+
         setState({ kind: "ready" });
+
+        imageryRenderWatchdogId = globalThis.setTimeout(() => {
+          const googleImageryImages = getStreetViewImageryImages(container);
+
+          if (
+            !isCancelled &&
+            !hasStreetViewImageryLoadError &&
+            googleImageryImages.length > 0 &&
+            !hasLoadedStreetViewImagery(googleImageryImages)
+          ) {
+            surfaceStreetViewImageryLoadError();
+          }
+        }, STREET_VIEW_IMAGERY_RENDER_GRACE_PERIOD_MS);
       } catch (error) {
-        if (isCancelled) {
+        if (isCancelled || hasStreetViewImageryLoadError) {
           return;
         }
 
@@ -357,13 +482,21 @@ const GameStreetViewComponent: React.FC<GameStreetViewProps> = ({
 
     return () => {
       isCancelled = true;
+      if (handleResourceError) {
+        document.removeEventListener("error", handleResourceError, true);
+        globalThis.removeEventListener("error", handleResourceError, true);
+      }
+      resourceTimingObserver?.disconnect();
+      if (imageryRenderWatchdogId !== null) {
+        globalThis.clearTimeout(imageryRenderWatchdogId);
+      }
       panoramaListenerRef.current?.remove();
       panoramaListenerRef.current = null;
       panoramaRef.current?.setVisible(false);
       panoramaRef.current = null;
 
-      if (panoramaContainerRef.current) {
-        panoramaContainerRef.current.innerHTML = "";
+      if (streetViewContainer) {
+        streetViewContainer.innerHTML = "";
       }
     };
   }, [panoramaId]);

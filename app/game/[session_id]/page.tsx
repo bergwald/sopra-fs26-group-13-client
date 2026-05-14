@@ -20,6 +20,7 @@ import {
   getStoredCurrentUserId,
   getStoredToken,
 } from "@/utils/auth";
+import { parseAbsoluteApiTimestamp } from "@/utils/apiTime";
 import { storeSinglePlayerRoundResult } from "@/utils/singleplayerResult";
 import {
   Clock3,
@@ -32,7 +33,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 
 const TOTAL_ROUNDS = 3;
-const ROUND_LENGTH_SECONDS = 30_000;
+const ROUND_LENGTH_MS = 60_000;
 
 const MASCOT_IMAGES: Record<number, string> = {
   1: "/mascots/earth-sunglasses.svg",
@@ -62,9 +63,7 @@ const DEFAULT_GAME_DATA: GameData = {
   // location_name: "",
 };
 
-const formatTimeLeft = (expiryDate: string): string => {
-  const millisecondsLeft = new Date(expiryDate).getTime() - Date.now();
-
+const formatTimeLeftMilliseconds = (millisecondsLeft: number): string => {
   if (millisecondsLeft <= 0) {
     return "00:00";
   }
@@ -75,15 +74,12 @@ const formatTimeLeft = (expiryDate: string): string => {
   return `${minutes}:${seconds}`;
 };
 
-const formatTimeLeftMilliseconds = (millisecondsLeft: number): string => {
-  if (millisecondsLeft <= 0) {
-    return "00:00";
+const getRoundMillisecondsLeft = (roundStarted: string): number | null => {
+  const roundStartedMilliseconds = parseAbsoluteApiTimestamp(roundStarted);
+  if (roundStartedMilliseconds === null) {
+    return null;
   }
-
-  const totalSeconds = Math.floor(millisecondsLeft / 1000);
-  const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, "0");
-  const seconds = (totalSeconds % 60).toString().padStart(2, "0");
-  return `${minutes}:${seconds}`;
+  return roundStartedMilliseconds + ROUND_LENGTH_MS - Date.now();
 };
 
 
@@ -142,8 +138,8 @@ const GamePage: React.FC = () => {
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [mapExpanded, setMapExpanded] = React.useState<boolean>(false);
   const [hasSubmittedGuess, setHasSubmittedGuess] = React.useState<boolean>(false);
-  const [timeLeft] = React.useState<string>(
-    formatTimeLeft(DEFAULT_SESSION.expiry_date),
+  const [roundTimeLeft, setRoundTimeLeft] = React.useState<string>(
+    formatTimeLeftMilliseconds(ROUND_LENGTH_MS),
   );
   const [errorMessage, setErrorMessage] = React.useState<string>("");
   const [selectedGuess, setSelectedGuess] = React.useState<GuessCoordinates | null>(null);
@@ -169,7 +165,7 @@ const GamePage: React.FC = () => {
     setErrorMessage("");
 
     if (!token || !storedCurrentUserId || !storedCurrentMascotId) {
-      router.replace("/login");
+      router.replace("/");
       return;
     }
 
@@ -203,9 +199,18 @@ const GamePage: React.FC = () => {
         `/game_data?sessionId=${encodeURIComponent(sessionId)}&roundNumber=${currentSessionUser.roundNumber}`,
         headers,
       );
-      console.log("Mapped session: ", mappedSession);
-      setSession(mappedSession);
-      setGameData(mapBackendGameDataToGameData(backendGameData, mappedSession));
+      const sessionForRound = {
+        ...mappedSession,
+        round_started: backendGameData.roundStartedDateTime ?? mappedSession.round_started,
+      };
+      const millisecondsLeft = getRoundMillisecondsLeft(sessionForRound.round_started);
+      if (millisecondsLeft === null) {
+        throw new Error("The server returned an invalid round start time.");
+      }
+      console.log("Mapped session: ", sessionForRound);
+      setSession(sessionForRound);
+      setRoundTimeLeft(formatTimeLeftMilliseconds(millisecondsLeft));
+      setGameData(mapBackendGameDataToGameData(backendGameData, sessionForRound));
       setSelectedGuess(null);
       setHasSubmittedGuess(false);
       setIsAuthorized(true);
@@ -213,7 +218,7 @@ const GamePage: React.FC = () => {
       const appError = error as ApplicationError;
 
       if (appError.status === 401 || appError.status === 403) {
-        router.replace("/login");
+        router.replace("/");
         return;
       }
 
@@ -248,10 +253,6 @@ const GamePage: React.FC = () => {
       document.body.style.overflow = previousBodyOverflow;
     };
   }, []);
-  const [roundTimeLeft, setRoundTimeLeft] = React.useState<string>(
-    formatTimeLeft(new Date(new Date(session.round_started!).getTime() + ROUND_LENGTH_SECONDS).toISOString())
-  );
-
   React.useEffect(() => {
     if (leafletMapRef.current) {
       globalThis.setTimeout(() => leafletMapRef.current?.invalidateSize(), 200);
@@ -265,8 +266,10 @@ const GamePage: React.FC = () => {
 
   const handleSubmitGuess = async () => {
     const token = getStoredToken();
+    const storedCurrentMascotId = getStoredCurrentMascotId();
 
-    if (!currentUserId || !token) {
+    if (!currentUserId || !token || !storedCurrentMascotId) {
+      router.replace("/");
       return;
     }
 
@@ -306,7 +309,7 @@ const GamePage: React.FC = () => {
       setHasSubmittedGuess(false);
 
       if (appError.status === 401 || appError.status === 403) {
-        router.replace("/login");
+        router.replace("/");
         return;
       }
 
@@ -326,30 +329,42 @@ const GamePage: React.FC = () => {
   React.useEffect(() => {
     if (!session.round_started) return;
 
-    // Calculate server time offset (only once)
-    const serverTime = new Date(session.round_started).getTime();
-    const clientTime = Date.now();
-    const timeOffset = serverTime - clientTime; // Server time - Client time
+    const updateRoundTimer = () => {
+      const millisecondsLeft = getRoundMillisecondsLeft(session.round_started);
 
-    const roundExpiryDate = serverTime + ROUND_LENGTH_SECONDS;
+      if (millisecondsLeft === null) {
+        setErrorMessage("The server returned an invalid round start time.");
+        return false;
+      }
 
-    const timer = globalThis.setInterval(() => {
-      // Use adjusted "now" that accounts for server timezone
-      const adjustedNow = Date.now() + timeOffset;
-      const millisecondsLeft = roundExpiryDate - adjustedNow;
-
-      if (millisecondsLeft <= 0) {
+      if (millisecondsLeft <= 0 && !hasSubmittedGuess) {
         console.log("Timeout reached!");
         setRoundTimeLeft("00:00");
-        globalThis.clearInterval(timer);
         void handleSubmitGuess();
+        return false;
+      }
+
+      if (millisecondsLeft <= 0) {
+        setRoundTimeLeft("00:00");
+        return false;
       } else {
         setRoundTimeLeft(formatTimeLeftMilliseconds(millisecondsLeft));
+        return true;
+      }
+    };
+
+    if (!updateRoundTimer()) {
+      return;
+    }
+
+    const timer = globalThis.setInterval(() => {
+      if (!updateRoundTimer()) {
+        globalThis.clearInterval(timer);
       }
     }, 1000);
 
     return () => globalThis.clearInterval(timer); // Cleanup
-  }, [session.round_started]);
+  }, [hasSubmittedGuess, session.round_started]);
 
   if (isLoading || !isAuthorized) {
     return (
@@ -357,6 +372,10 @@ const GamePage: React.FC = () => {
         {errorMessage || "Loading game session..."}
       </div>
     );
+  }
+
+  if (errorMessage) {
+    return <div className="login-container">{errorMessage}</div>;
   }
 
 
@@ -370,7 +389,7 @@ const GamePage: React.FC = () => {
         <div className="login-page-nav-left">
           <Link href="/" className="login-page-brand">
             <div className="login-page-brand-icon" aria-hidden="true">
-              G
+              ⛰️
             </div>
             <span className="login-page-brand-text">MountainGuessr</span>
           </Link>
@@ -379,14 +398,8 @@ const GamePage: React.FC = () => {
         <div className="game-page-nav-center">
           <div className="game-page-status-pill">
             <Clock3 className="game-page-status-icon" />
-            <span>Session Timer</span>
-            <strong>{timeLeft}</strong>
-          </div>
-          <div className="game-page-status-pill">
-            <Clock3 className="game-page-status-icon" />
             <span>Round Timer</span>
-            <strong>{formatTimeLeft(new Date(new Date(session.round_started!).getTime() + ROUND_LENGTH_SECONDS).toISOString())}</strong>
-
+            <strong>{roundTimeLeft}</strong>
           </div>
         </div>
 

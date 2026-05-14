@@ -498,7 +498,7 @@ a {
   flex-direction: column;
   gap: 36px;
   width: 100%;
-  max-width: 72rem;
+  max-width: 55rem;
   margin: 0 auto;
   padding: 48px 24px 56px;
 }
@@ -544,7 +544,6 @@ a {
 .home-hero-copy {
   position: relative;
   z-index: 1;
-  max-width: 40rem;
   margin-bottom: 28px;
 }
 
@@ -570,6 +569,15 @@ a {
   color: #64748b;
   font-size: 1.05rem;
   line-height: 1.7;
+}
+
+.home-hero-question {
+  color: #334155;
+  font-weight: 600;
+}
+
+.home-hero-text + .home-hero-text {
+  margin-top: 4px;
 }
 
 .home-play-grid {
@@ -873,6 +881,14 @@ a {
   background: rgba(255, 255, 255, 0.5);
 }
 
+.home-leaderboard-row-current {
+  background: rgba(219, 234, 254, 0.55);
+}
+
+.home-leaderboard-row-current:hover {
+  background: rgba(191, 219, 254, 0.65);
+}
+
 .home-leaderboard-table tbody tr:last-child {
   border-bottom: none;
 }
@@ -900,6 +916,11 @@ a {
   gap: 14px;
 }
 
+.home-player-link-current .home-player-avatar {
+  border-color: rgba(37, 99, 235, 0.35);
+  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.14);
+}
+
 .home-player-avatar {
   display: inline-flex;
   width: 42px;
@@ -925,8 +946,18 @@ a {
   transition: color 0.2s ease;
 }
 
+.home-player-name-current {
+  color: #1d4ed8;
+}
+
 .home-player-link:hover .home-player-name {
   color: #2563eb;
+}
+
+.home-leaderboard-empty {
+  color: #64748b;
+  font-style: italic;
+  text-align: center !important;
 }
 
 .home-score-cell {
@@ -2244,22 +2275,16 @@ a {
 }
 
 .login-page-brand-icon {
+  position: relative;
+  top: -3px;
   display: flex;
   width: 32px;
   height: 32px;
   align-items: center;
   justify-content: center;
-  border-radius: 0.75rem;
-  background: #3b82f6;
-  color: #ffffff;
-  font-size: 1rem;
+  font-size: 2rem;
   font-weight: 700;
-  box-shadow: 0 8px 16px rgba(59, 130, 246, 0.2);
-  transition: background-color 0.2s ease;
-}
-
-.login-page-brand:hover .login-page-brand-icon {
-  background: #2563eb;
+  line-height: 1;
 }
 
 .login-page-brand-text {
@@ -2267,6 +2292,7 @@ a {
   font-size: 1.25rem;
   font-weight: 700;
   letter-spacing: -0.02em;
+  line-height: 32px;
 }
 
 .login-page-close-button {

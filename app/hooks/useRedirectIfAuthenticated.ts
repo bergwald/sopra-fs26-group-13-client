@@ -3,9 +3,11 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import {
+  clearStoredAuth,
   getStoredCurrentMascotId,
   getStoredCurrentUserId,
   getStoredToken,
+  validateStoredAuth,
 } from "@/utils/auth";
 
 /**
@@ -18,16 +20,43 @@ export default function useRedirectIfAuthenticated(): boolean {
   const [isAuthChecked, setIsAuthChecked] = React.useState<boolean>(false);
 
   React.useEffect(() => {
+    let isActive = true;
+
     const token = getStoredToken();
     const currentUserId = getStoredCurrentUserId();
     const currentMascotId = getStoredCurrentMascotId();
 
-    if (token && currentUserId && currentMascotId) {
-      router.replace(`/users/${currentUserId}`);
-      return;
+    if ((token && !currentUserId) || (!token && (currentUserId || currentMascotId))) {
+      clearStoredAuth();
     }
 
-    setIsAuthChecked(true);
+    if (!token || !currentUserId) {
+      setIsAuthChecked(true);
+      return () => {
+        isActive = false;
+      };
+    }
+
+    const validateAndRedirect = async (): Promise<void> => {
+      const validation = await validateStoredAuth();
+
+      if (!isActive) {
+        return;
+      }
+
+      if (validation.status === "authenticated") {
+        router.replace(`/users/${validation.userId}`);
+        return;
+      }
+
+      setIsAuthChecked(true);
+    };
+
+    void validateAndRedirect();
+
+    return () => {
+      isActive = false;
+    };
   }, [router]);
 
   return isAuthChecked;

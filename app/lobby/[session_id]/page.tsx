@@ -1,6 +1,7 @@
 "use client";
 
 import { useApi } from "@/hooks/useApi";
+import type { ApplicationError } from "@/types/error";
 import type { BackendSessionUserDetails, User } from "@/types/user";
 import {
   getStoredCurrentMascotId,
@@ -171,6 +172,12 @@ const LobbyPage: React.FC = () => {
           return;
         }
 
+        const appError = fetchError as ApplicationError;
+        if (appError.status === 401 || appError.status === 403 || appError.status === 404) {
+          router.replace("/");
+          return;
+        }
+
         console.error("Failed to fetch session data:", fetchError);
         setError("Failed to fetch session data. Retrying...");
         setLoading(false);
@@ -207,8 +214,9 @@ const LobbyPage: React.FC = () => {
     try {
       const token = getStoredToken();
       const storedCurrentUserId = getStoredCurrentUserId();
+      const storedCurrentMascotId = getStoredCurrentMascotId();
 
-      if (!token || !storedCurrentUserId || !sessionId) {
+      if (!token || !storedCurrentUserId || !storedCurrentMascotId || !sessionId) {
         router.replace("/");
         return;
       }
@@ -221,6 +229,12 @@ const LobbyPage: React.FC = () => {
       );
       router.push(`/game/${sessionId}`);
     } catch (startError) {
+      const appError = startError as ApplicationError;
+      if (appError.status === 401 || appError.status === 403 || appError.status === 404) {
+        router.replace("/");
+        return;
+      }
+
       console.error("Failed to start game:", startError);
       setError("Failed to start the game. Please try again.");
     }
@@ -271,7 +285,7 @@ const LobbyPage: React.FC = () => {
         <div className="login-page-nav-left">
           <Link href="/" className="login-page-brand">
             <div className="login-page-brand-icon" aria-hidden="true">
-              G
+              ⛰️
             </div>
             <span className="login-page-brand-text">MountainGuessr</span>
           </Link>

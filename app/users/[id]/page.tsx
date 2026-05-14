@@ -171,13 +171,13 @@ const UserProfilePage: React.FC = () => {
     ? MASCOT_IMAGES[currentMascotId] ?? MASCOT_IMAGES[1]
     : undefined;
   const isLoggedIn = getStoredToken() !== null && currentUserId !== null && currentMascotId !== null;
-  const rankScore = user.avg_score ?? 0;
+  const rankScore = user.score ?? 0;
   const profileRank = getRankForScore(rankScore);
 
   const stats: ProfileStat[] = [
     {
       label: "Score",
-      value: user.avg_score == null ? "-" : formatNumber(user.avg_score),
+      value: user.score == null ? "-" : formatNumber(user.score),
       Icon: TrendingUp,
       colorClassName: "profile-stat-icon-blue",
       backgroundClassName: "profile-stat-icon-bg-blue",
@@ -206,7 +206,7 @@ const UserProfilePage: React.FC = () => {
         <div className="login-page-nav-left">
           <Link href="/" className="login-page-brand">
             <div className="login-page-brand-icon" aria-hidden="true">
-              G
+              ⛰️
             </div>
             <span className="login-page-brand-text">MountainGuessr</span>
           </Link>
