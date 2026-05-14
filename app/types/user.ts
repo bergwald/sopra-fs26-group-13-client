@@ -84,6 +84,7 @@ export interface BackendSessionUserDetails {
   guessSubmitted: boolean;
   guessLatitude: number;
   guessLongitude: number;
+  mascotId: number;
 }
 
 export interface BackendGameData {
