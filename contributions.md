@@ -126,12 +126,13 @@ reason).
 
 ---
 
-## Contributions Week 8 - [Begin Date] to [End Date]
+## Contributions Week 8 - 11.04.2026 to 17.04.2026
 
 | **Student**        | **Date** | **Link to Commit** | **Description**                 | **Relevance**                       |
 | ------------------ | -------- | ------------------ | ------------------------------- | ----------------------------------- |
-| **[@githubUser1]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **@bergwald**      | 11.05.26 | [Commit cb78801](https://github.com/bergwald/sopra-fs26-group-13-server/commit/cb78801aa9daf41298b315278d5d09b9b29f1b45) (backend) and [Commit 29f99b9](https://github.com/bergwald/sopra-fs26-group-13-client/commit/29f99b9c9cb64a66cd460171f9a501851a29819d) | Fix an auto-timeout bug with the round timer by making session timestamps unambiguous on the API boundary (format timestamps as UTC instants with Z). | The timer would auto-timeout when the server and backend were configured with different timezones, making play impossible. |
+|                    | 12.05.26 | [Commit 3c78342](https://github.com/bergwald/sopra-fs26-group-13-server/commit/3c78342d3bb112a6250cbd870b040f4f5abe43be) | Change `avg_score` to `score` (compute cumulative score instead of per-round average) | We decided that a cumulative instead of a per-round average score would be better to display on the leaderboard. |
+|                    | 12.05.26 | [Commit 510ab2f](https://github.com/bergwald/sopra-fs26-group-13-client/commit/510ab2f906a455e0f6bf9b2243e8625bac4f3dbe) | Improve homepage design; fix bug in results page when the user does not submit a guess. | The homepage design was boring and unattractive. When a user did not make a guess, a random pin was still displayed on the map and the distance was indicated as "-1 km". |
 | **[@githubUser2]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
 |                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | **[@githubUser3]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
