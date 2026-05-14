@@ -242,6 +242,8 @@ const ResultPage: React.FC = () => {
   const navMascotImage = currentMascotId
     ? MASCOT_IMAGES[currentMascotId] ?? MASCOT_IMAGES[1]
     : undefined;
+  const allPlayersSubmitted = sessionUsers.length > 0 &&
+    sessionUsers.every((user) => user.guessSubmitted);
 
   return (
     <div className="result-page-root">
@@ -355,7 +357,7 @@ const ResultPage: React.FC = () => {
             <button
               type="button"
               className="result-next-button"
-              disabled={isFinished ? false : currentUserRole !== "OWNER"}
+              disabled={!isFinished && (currentUserRole !== "OWNER" || !allPlayersSubmitted)}
               onClick={async () => {
                 if (isFinished) {
                   router.push("/");
