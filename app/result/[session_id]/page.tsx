@@ -159,6 +159,16 @@ const ResultPage: React.FC = () => {
         role: u.userRole,
       }));
   }, [sessionUsers, roundResult]);
+
+  const roundLeaderboardUsers = React.useMemo(() => {
+    return [...sessionUsers]
+      .sort((a, b) => b.score - a.score)
+      .map((user, index) => ({
+        ...user,
+        rank: index + 1,
+      }));
+  }, [sessionUsers]);
+
   React.useEffect(() => {
     const shouldPoll = !isLoading &&
       sessionUser &&
@@ -345,6 +355,87 @@ const ResultPage: React.FC = () => {
                 <span className="result-stat-unit">pts</span>
               </div>
             </div>
+          </div>
+          <div className="home-leaderboard-table-wrap result-leaderboard-wrap">
+            <table className="home-leaderboard-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Player</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {roundLeaderboardUsers.map((leaderboardUser, index) => {
+                  const mascotImage =
+                    MASCOT_IMAGES[leaderboardUser.mascotId] ??
+                    MASCOT_IMAGES[1];
+
+                  const isCurrentUser =
+                    leaderboardUser.id === currentUserId;
+
+                  return (
+                    <tr
+                      key={leaderboardUser.id}
+                      className={
+                        isCurrentUser
+                          ? "home-leaderboard-row-current"
+                          : undefined
+                      }
+                    >
+                      <td>
+                        <span
+                          className={`home-rank-badge ${
+                            index === 0
+                              ? "home-rank-badge-gold"
+                              : index === 1
+                              ? "home-rank-badge-silver"
+                              : index === 2
+                              ? "home-rank-badge-bronze"
+                              : ""
+                          }`}
+                        >
+                          #{index + 1}
+                        </span>
+                      </td>
+
+                      <td>
+                        <Link
+                          href={`/users/${leaderboardUser.id}`}
+                          className={`home-player-link ${
+                            isCurrentUser
+                              ? "home-player-link-current"
+                              : ""
+                          }`}
+                        >
+                          <span className="home-player-avatar">
+                            <img
+                              src={mascotImage}
+                              alt={`${leaderboardUser.username} mascot`}
+                              className="home-player-avatar-image"
+                            />
+                          </span>
+
+                          <span
+                            className={`home-player-name ${
+                              isCurrentUser
+                                ? "home-player-name-current"
+                                : ""
+                            }`}
+                          >
+                            {leaderboardUser.username}
+                          </span>
+                        </Link>
+                      </td>
+                      <td className="home-score-cell">
+                        {leaderboardUser.score}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
 
           <p className="result-hero-description">
