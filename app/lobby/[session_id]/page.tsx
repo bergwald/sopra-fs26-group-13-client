@@ -202,7 +202,7 @@ const LobbyPage: React.FC = () => {
     }
 
     try {
-      await navigator.clipboard.writeText(sessionId);
+      await navigator.clipboard.writeText(shortenUUID(sessionId));
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (copyError) {
@@ -268,7 +268,7 @@ const LobbyPage: React.FC = () => {
   if (error && sessionUsers.length === 0) {
     return <div className="login-container">{error}</div>;
   }
-  
+
   function shortenUUID(uuid: string): string {
       return uuid.split('-').map(part => part[part.length - 1]).join('');
   }
