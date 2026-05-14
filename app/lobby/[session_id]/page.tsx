@@ -202,7 +202,7 @@ const LobbyPage: React.FC = () => {
     }
 
     try {
-      await navigator.clipboard.writeText(sessionId);
+      await navigator.clipboard.writeText(shortenUUID(sessionId));
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (copyError) {
@@ -269,13 +269,15 @@ const LobbyPage: React.FC = () => {
     return <div className="login-container">{error}</div>;
   }
 
+  function shortenUUID(uuid: string): string {
+      return uuid.split('-').map(part => part[part.length - 1]).join('');
+  }
+
   const navMascotImage = currentMascotId
     ? MASCOT_IMAGES[currentMascotId] ?? MASCOT_IMAGES[1]
     : undefined;
   const isLoggedIn = getStoredToken() !== null && currentUserId !== null && currentMascotId !== null;
-  const displaySessionId = sessionId && sessionId.length > 8
-    ? `${sessionId.slice(0, 8)}...`
-    : sessionId;
+  const displaySessionId = shortenUUID(sessionId);
 
   const lobbyUsers: LobbyUser[] = sessionUsers.map((user) => {
     const fetchedUser = userDetailsById[user.id];
