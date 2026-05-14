@@ -239,6 +239,27 @@ const LobbyPage: React.FC = () => {
       setError("Failed to start the game. Please try again.");
     }
   };
+  const handleLeaveLobby = async () => {
+    try {
+
+      const token = getStoredToken();
+      const storedCurrentUserId = getStoredCurrentUserId();
+
+      if (!token || !storedCurrentUserId || !sessionId) {
+        router.replace("/");
+        return;
+      }
+      const headers = buildAuthorizedHeaders(token, storedCurrentUserId);
+      await api.delete(
+        `/session/${sessionId}`,
+        headers,
+      );
+      router.replace("/");
+    } catch (startError) {
+      console.error("uje cant leave lobby:", startError);
+      setError("uje cant leave lobby.");
+    }
+  };
 
   if (loading) {
     return <div className="login-container">Loading lobby...</div>;
@@ -404,7 +425,7 @@ const LobbyPage: React.FC = () => {
       <div className="lobby-action-bar">
         <button
           type="button"
-          onClick={() => router.push("/")}
+          onClick={() => void handleLeaveLobby()}
           className="lobby-leave-button"
         >
           <LogOut className="lobby-action-icon" />
