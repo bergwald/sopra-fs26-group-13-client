@@ -173,7 +173,7 @@ const LobbyPage: React.FC = () => {
         }
 
         const appError = fetchError as ApplicationError;
-        if (appError.status === 401 || appError.status === 403 || appError.status === 404) {
+        if (appError.status === 400 || appError.status === 401 || appError.status === 403 || appError.status === 404) {
           router.replace("/");
           return;
         }
@@ -230,7 +230,7 @@ const LobbyPage: React.FC = () => {
       router.push(`/game/${sessionId}`);
     } catch (startError) {
       const appError = startError as ApplicationError;
-      if (appError.status === 401 || appError.status === 403 || appError.status === 404) {
+      if (appError.status === 400 || appError.status === 401 || appError.status === 403 || appError.status === 404) {
         router.replace("/");
         return;
       }
