@@ -142,12 +142,12 @@ reason).
 
 ---
 
-## Contributions Week 9 - [Begin Date] to [End Date]
+## Contributions Week 9 - 18.04.2026 to 24.04.2026
 
 | **Student**        | **Date** | **Link to Commit** | **Description**                 | **Relevance**                       |
 | ------------------ | -------- | ------------------ | ------------------------------- | ----------------------------------- |
-| **[@githubUser1]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **@bergwald**      | 13.05.26 | [Commit 5867c84](https://github.com/bergwald/sopra-fs26-group-13-client/commit/5867c84802f468eb3dbffa4b184692a531f33371) (frontend) and [Commit f62cb06](https://github.com/bergwald/sopra-fs26-group-13-server/commit/f62cb06bc14b79286bb7b921af5ddd5a93d2ffc8) (backend) | Fix bug stemming from invalid credentials: validate authentication credentials with a new GET /auth/validate route. | The frontend did not validate if a user's credentials were valid. As a result, a user with outdated credentials (e.g. because of a restart of the backend) would have to manually clear his local storage. |
+|                    | 13.05.26 | [Commit d246c31](https://github.com/bergwald/sopra-fs26-group-13-client/commit/d246c312aea78bf9def129cde1245d37294f4b75) | Detect failed Google Street View tile/resource loads (429 HTTP errors) and show a clear error message when imagery cannot render. | We noticed that in some cases, the Google Street View API fails to load with a 429 HTTP error. We now display a clear error message when this happens. |
 | **[@githubUser2]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
 |                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | **[@githubUser3]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
