@@ -85,7 +85,6 @@ const LobbyPage: React.FC = () => {
 
     const fetchMissingUserDetails = async (
       users: BackendSessionUserDetails[],
-      token: string,
     ) => {
       const missingIds = users
         .map((user) => user.id)
@@ -100,9 +99,7 @@ const LobbyPage: React.FC = () => {
       const resolvedUsers = await Promise.all(
         missingIds.map(async (id) => {
           try {
-            const user = await api.get<User>(`/users/${id}`, {
-              Authorization: `Bearer ${token}`,
-            });
+            const user = await api.get<User>(`/users/${id}`);
             return { id, user };
           } catch {
             return {
@@ -165,7 +162,7 @@ const LobbyPage: React.FC = () => {
         setError(null);
         setLoading(false);
         backoffMs = DEFAULT_POLL_INTERVAL_MS;
-        void fetchMissingUserDetails(response, token);
+        void fetchMissingUserDetails(response);
         scheduleNextFetch(DEFAULT_POLL_INTERVAL_MS);
       } catch (fetchError) {
         if (cancelled) {
@@ -230,8 +227,12 @@ const LobbyPage: React.FC = () => {
       router.push(`/game/${sessionId}`);
     } catch (startError) {
       const appError = startError as ApplicationError;
-      if (appError.status === 401 || appError.status === 403 || appError.status === 404) {
+      if (appError.status === 401 || appError.status === 404) {
         router.replace("/");
+        return;
+      }
+      if (appError.status === 403) {
+        alert("Only the host can start the game.");
         return;
       }
 
