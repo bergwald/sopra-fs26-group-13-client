@@ -476,8 +476,12 @@ const ResultPage: React.FC = () => {
                   router.push(`/game/${sessionId}`);
                 } catch (error) {
                   const appError = error as ApplicationError;
-                  if (appError.status === 401 || appError.status === 403 || appError.status === 404) {
+                  if (appError.status === 401 || appError.status === 404) {
                     router.replace("/");
+                    return;
+                  }
+                  if (appError.status === 403) {
+                    alert("Only the host can start the next round.");
                     return;
                   }
 
