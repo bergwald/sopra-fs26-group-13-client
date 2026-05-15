@@ -137,8 +137,8 @@ reason).
 |                    | 14.05.26   | [Commit 343878f](https://github.com/bergwald/sopra-fs26-group-13-client/commit/343878fe9ee4c96b75d1da7dec44a0c82fc6922c) (frontend) [commit 1ca095e](https://github.com/bergwald/sopra-fs26-group-13-server/commit/1ca095ee492707814d4523dfbcd9f29bf35f98db) (backend)| Resultpage now also has a Leaderboard, that updates after each guess of the players, it displays all players of session, ranked in descending score | Feature: during game, information about score of other players is shown, makes game competitive. |
 | **@juliand924** | 14.05.26   | [Commit 0773f3e](https://github.com/bergwald/sopra-fs26-group-13-server/commit/0773f3e0e9120c237ac2d8a665fd1a6282cf82de) | Users couldn't leave the multiplayer lobby properly. | Users should be able to leave a lobby and there should be logic in place, where if the lobby owner leaves, the ownership should be passed on to another member. |
 |                    | 14.05.26   | [Commit aeffc77](https://github.com/bergwald/sopra-fs26-group-13-server/commit/aeffc77c3c16d9e339ef21d37c2ef8b0b61382f8) | Added capability to use a short form of the session id to join. | The previous session id, on which the user could join a game was very complex (36 characters) now its 5 characters long. |
-| **[@githubUser4]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **@plaiimade** | 13.05.26   | [Commit 6123759](https://github.com/bergwald/sopra-fs26-group-13-client/commit/6123759b0ed314ff7a7ef1fed23a3d28d0563686) | Added the global leaderboard | Now the homepage is complete and the page finished |
+|                    | 14.05.26   | [Commit f4fae9d](https://github.com/bergwald/sopra-fs26-group-13-client/commit/f4fae9d1c55c0772a784474dfc651fed816c5e95) | Made all authentication checks & redirects consistent (still ongoing, couple of other merges belong to that aswell) | Consistency and safety across frontend pages |
 
 ---
 
