@@ -138,7 +138,9 @@ reason).
 | **@juliand924** | 14.05.26   | [Commit 0773f3e](https://github.com/bergwald/sopra-fs26-group-13-server/commit/0773f3e0e9120c237ac2d8a665fd1a6282cf82de) | Users couldn't leave the multiplayer lobby properly. | Users should be able to leave a lobby and there should be logic in place, where if the lobby owner leaves, the ownership should be passed on to another member. |
 |                    | 14.05.26   | [Commit aeffc77](https://github.com/bergwald/sopra-fs26-group-13-server/commit/aeffc77c3c16d9e339ef21d37c2ef8b0b61382f8) | Added capability to use a short form of the session id to join. | The previous session id, on which the user could join a game was very complex (36 characters) now its 5 characters long. |
 | **@plaiimade** | 13.05.26   | [Commit 6123759](https://github.com/bergwald/sopra-fs26-group-13-client/commit/6123759b0ed314ff7a7ef1fed23a3d28d0563686) | Added the global leaderboard | Now the homepage is complete and the page finished |
-|                    | 14.05.26   | [Commit f4fae9d](https://github.com/bergwald/sopra-fs26-group-13-client/commit/f4fae9d1c55c0772a784474dfc651fed816c5e95) | Made all authentication checks & redirects consistent (still ongoing, couple of other merges belong to that aswell) | Consistency and safety across frontend pages |
+|                    | 14.05.26   | [Commit f4fae9d](https://github.com/bergwald/sopra-fs26-group-13-client/commit/f4fae9d1c55c0772a784474dfc651fed816c5e95)
+[Commit cbeedd5](https://github.com/bergwald/sopra-fs26-group-13-client/commit/cbeedd5a45e26a5846b36409138b5ea8c555a00b)
+[Commit aec441d](https://github.com/bergwald/sopra-fs26-group-13-client/commit/aec441d66e5f3eb5a9897ccb1bb9627264a11778) | Made all authentication checks & redirects consistent (still ongoing, couple of other merges belong to that aswell) | Consistency and safety across frontend pages |
 
 ---
 
@@ -148,7 +150,7 @@ reason).
 | ------------------ | -------- | ------------------ | ------------------------------- | ----------------------------------- |
 | **@bergwald**      | 13.05.26 | [Commit 5867c84](https://github.com/bergwald/sopra-fs26-group-13-client/commit/5867c84802f468eb3dbffa4b184692a531f33371) (frontend) and [Commit f62cb06](https://github.com/bergwald/sopra-fs26-group-13-server/commit/f62cb06bc14b79286bb7b921af5ddd5a93d2ffc8) (backend) | Fix bug stemming from invalid credentials: validate authentication credentials with a new GET /auth/validate route. | The frontend did not validate if a user's credentials were valid. As a result, a user with outdated credentials (e.g. because of a restart of the backend) would have to manually clear his local storage. |
 |                    | 13.05.26 | [Commit d246c31](https://github.com/bergwald/sopra-fs26-group-13-client/commit/d246c312aea78bf9def129cde1245d37294f4b75) | Detect failed Google Street View tile/resource loads (429 HTTP errors) and show a clear error message when imagery cannot render. | We noticed that in some cases, the Google Street View API fails to load with a 429 HTTP error. We now display a clear error message when this happens. |
-| **[@githubUser2]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
+| **@plaiimade** | 15.05.26   | [Commit 746262e](https://github.com/bergwald/sopra-fs26-group-13-client/commit/746262e7a09f5bf7459b3d5933de2ee2c5ca541b) | Added region picker | Last functionality added, site now complete |
 |                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | **[@githubUser3]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
 |                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
