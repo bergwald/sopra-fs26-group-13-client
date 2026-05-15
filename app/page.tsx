@@ -74,6 +74,21 @@ const formatDistance = (distance: number): string => {
 };
 
 type PendingHomeAction = "singleplayer" | "create-session" | "join-session" | null;
+type RegionSelectionAction = "singleplayer" | "create-session" | null;
+type RegionOption = {
+  id: string;
+  label: string;
+  image: string;
+};
+
+const REGION_OPTIONS: RegionOption[] = [
+  { id: "", label: "Entire World", image: "/regions/entire-world.svg" },
+  { id: "Alps", label: "Alps", image: "/regions/alps.svg" },
+  { id: "NewZealandAlps", label: "New Zealand Alps", image: "/regions/new-zealand-alps.svg" },
+  { id: "Himalaya", label: "Himalaya", image: "/regions/himalaya.svg" },
+  { id: "JapaneseAlps", label: "Japanese Alps", image: "/regions/japanese-alps.svg" },
+  { id: "Andes", label: "Andes", image: "/regions/andes.svg" },
+];
 
 const HomePage: React.FC = () => {
   const router = useRouter();
@@ -83,6 +98,8 @@ const HomePage: React.FC = () => {
   const [leaderboardUsers, setLeaderboardUsers] = React.useState<LeaderboardUser[]>([]);
   const [isMultiplayerOpen, setIsMultiplayerOpen] = React.useState<boolean>(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = React.useState<boolean>(false);
+  const [regionSelectionAction, setRegionSelectionAction] = React.useState<RegionSelectionAction>(null);
+  const [selectedRegion, setSelectedRegion] = React.useState<string>("");
   const [sessionIdInput, setSessionIdInput] = React.useState<string>("");
   const [pendingHomeAction, setPendingHomeAction] = React.useState<PendingHomeAction>(null);
 
@@ -133,8 +150,8 @@ const HomePage: React.FC = () => {
     ? "Joining session..."
     : "";
 
-  const handleSingleplayer = async () => {
-    if (isSessionActionPending) {
+  const createSession = async (action: Exclude<PendingHomeAction, "join-session" | null>) => {
+    if (isSessionActionPending || !currentUserId) {
       return;
     }
 
@@ -146,15 +163,19 @@ const HomePage: React.FC = () => {
       return;
     }
 
-    setPendingHomeAction("singleplayer");
+    setPendingHomeAction(action);
+    setRegionSelectionAction(null);
 
     try {
+      const endpoint = selectedRegion
+        ? `/session?region=${encodeURIComponent(selectedRegion)}`
+        : "/session";
       const response = await apiService.post<{
         id: string;
         sessionExpiryDateTime: string;
         roundNumber: number;
       }>(
-        "/session",
+        endpoint,
         { userId: currentUserId },
         {
           Authorization: `Bearer ${token}`,
@@ -162,9 +183,11 @@ const HomePage: React.FC = () => {
         },
       );
 
-
-
-      router.push(`/game/${response.id}`);
+      if (action === "singleplayer") {
+        router.push(`/game/${response.id}`);
+      } else {
+        router.push(`/lobby/${response.id}`);
+      }
     } catch (error) {
       const appError = error as ApplicationError;
 
@@ -174,32 +197,23 @@ const HomePage: React.FC = () => {
       }
 
       if (error instanceof Error) {
-        alert(`Something went wrong while creating a singleplayer session:\n${error.message}`);
+        alert(
+          `Something went wrong while ${action === "singleplayer" ? "creating a singleplayer session" : "creating a multiplayer session"}:\n${error.message}`,
+        );
       } else {
-        alert("Something went wrong while creating a singleplayer session.");
+        alert(
+          `Something went wrong while ${action === "singleplayer" ? "creating a singleplayer session" : "creating a multiplayer session"}.`,
+        );
       }
     } finally {
       setPendingHomeAction(null);
     }
   };
 
-
-
-
-  const handleCreateMultiplayer = async() => {
+  const openRegionSelection = (action: RegionSelectionAction) => {
     if (isSessionActionPending) {
       return;
     }
-
-      // Example backend direction:
-      // const response = await apiService.post<GameSession>(
-      //   "/sessions/multiplayer",
-      //   undefined,
-      //   { Authorization: `Bearer ${getStoredToken()}` },
-      // );
-      //
-      // Once the backend creates a room, send players into that lobby.
-      // router.push(`/lobby/${response.session_id}`);
     const token = getStoredToken();
     const storedCurrentMascotId = getStoredCurrentMascotId();
 
@@ -208,43 +222,8 @@ const HomePage: React.FC = () => {
       return;
     }
 
-    setPendingHomeAction("create-session");
-
-    try {
-      const response = await apiService.post<{
-        id: string;
-        sessionExpiryDateTime: string;
-        roundNumber: number;
-      }>(
-        "/session",
-        { userId: currentUserId },
-        {
-          Authorization: `Bearer ${token}`,
-          userId: String(currentUserId),
-        },
-      );
-
-
-
-      router.push(`/lobby/${response.id}`);
-    } catch (error) {
-      const appError = error as ApplicationError;
-
-      if (appError.status === 401 || appError.status === 403) {
-        router.push("/login");
-        return;
-      }
-
-      if (error instanceof Error) {
-        alert(`Something went wrong while creating a multiplayer session:\n${error.message}`);
-      } else {
-        alert("Something went wrong while creating a multiplayer session.");
-      }
-    } finally {
-      setPendingHomeAction(null);
-    }
+    setRegionSelectionAction(action);
   };
-
 
   const handleJoinSession = async(event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -370,7 +349,7 @@ const HomePage: React.FC = () => {
           <div className="home-play-grid">
             <button
               type="button"
-              onClick={() => void handleSingleplayer()}
+              onClick={() => openRegionSelection("singleplayer")}
               className="home-play-card home-play-card-blue"
               disabled={isSessionActionPending}
             >
@@ -410,7 +389,7 @@ const HomePage: React.FC = () => {
               <div className="home-multiplayer-actions">
                 <button
                   type="button"
-                  onClick={handleCreateMultiplayer}
+                  onClick={() => openRegionSelection("create-session")}
                   className="home-multiplayer-button"
                   disabled={isSessionActionPending}
                 >
@@ -564,6 +543,64 @@ const HomePage: React.FC = () => {
                 {pendingHomeAction === "join-session" ? "Joining..." : "Join Lobby"}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {regionSelectionAction && (
+        <div className="edit-profile-modal-backdrop">
+          <div className="edit-profile-modal home-region-modal" role="dialog" aria-modal="true">
+            <button
+              type="button"
+              onClick={() => setRegionSelectionAction(null)}
+              className="edit-profile-modal-close"
+              aria-label="Close region selection"
+              disabled={isSessionActionPending}
+            >
+              <X className="edit-profile-modal-close-icon" />
+            </button>
+
+            <h3 className="edit-profile-modal-title">
+              {regionSelectionAction === "singleplayer" ? "Choose a Region" : "Choose a Lobby Region"}
+            </h3>
+            <p className="edit-profile-modal-text">
+              Pick where your game will take place!
+            </p>
+
+            <div className="home-region-grid">
+              {REGION_OPTIONS.map((regionOption) => {
+                const isSelected = regionOption.id === selectedRegion;
+
+                return (
+                  <button
+                    key={regionOption.label}
+                    type="button"
+                    className={`edit-profile-mascot-option home-region-option${
+                      isSelected ? " edit-profile-mascot-option-selected" : ""
+                    }`}
+                    onClick={() => setSelectedRegion(regionOption.id)}
+                  >
+                    <img
+                      src={regionOption.image}
+                      alt={regionOption.label}
+                      className="home-region-image"
+                    />
+                    <span className="home-region-label">{regionOption.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              type="button"
+              className="edit-profile-save-button home-region-confirm-button"
+              onClick={() => void createSession(regionSelectionAction)}
+              disabled={isSessionActionPending}
+            >
+              <span>
+                {regionSelectionAction === "singleplayer" ? "Start Game" : "Create Lobby"}
+              </span>
+            </button>
           </div>
         </div>
       )}

@@ -960,6 +960,40 @@ a {
   text-align: center !important;
 }
 
+.home-region-modal {
+  max-width: 42rem;
+}
+
+.home-region-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.home-region-option {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.home-region-image {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 1rem;
+  object-fit: cover;
+}
+
+.home-region-label {
+  color: #1e293b;
+  font-weight: 700;
+  text-align: left;
+}
+
+.home-region-confirm-button {
+  width: 100%;
+}
+
 .home-score-cell {
   color: #2563eb;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
@@ -2136,6 +2170,10 @@ a {
 
   .home-player-link {
     gap: 10px;
+  }
+
+  .home-region-grid {
+    grid-template-columns: 1fr;
   }
 
   .home-player-avatar {
