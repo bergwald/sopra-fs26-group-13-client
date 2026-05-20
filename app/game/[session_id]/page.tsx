@@ -144,6 +144,7 @@ const GamePage: React.FC = () => {
   const [errorMessage, setErrorMessage] = React.useState<string>("");
   const [selectedGuess, setSelectedGuess] = React.useState<GuessCoordinates | null>(null);
   const leafletMapRef = React.useRef<LeafletMapLike | null>(null);
+  const timerRef = React.useRef<NodeJS.Timeout | null>(null);
 
   const sessionId = Array.isArray(params.session_id)
     ? params.session_id[0]
@@ -329,41 +330,45 @@ const GamePage: React.FC = () => {
   React.useEffect(() => {
     if (!session.round_started) return;
 
+    if (timerRef.current) {
+      globalThis.clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
     const updateRoundTimer = () => {
       const millisecondsLeft = getRoundMillisecondsLeft(session.round_started);
-
       if (millisecondsLeft === null) {
         setErrorMessage("The server returned an invalid round start time.");
         return false;
       }
-
       if (millisecondsLeft <= 0 && !hasSubmittedGuess) {
-        console.log("Timeout reached!");
         setRoundTimeLeft("00:00");
         void handleSubmitGuess();
         return false;
       }
-
       if (millisecondsLeft <= 0) {
         setRoundTimeLeft("00:00");
         return false;
-      } else {
-        setRoundTimeLeft(formatTimeLeftMilliseconds(millisecondsLeft));
-        return true;
       }
+      setRoundTimeLeft(formatTimeLeftMilliseconds(millisecondsLeft));
+      return true;
     };
 
-    if (!updateRoundTimer()) {
-      return;
-    }
+    if (!updateRoundTimer()) return;
 
-    const timer = globalThis.setInterval(() => {
-      if (!updateRoundTimer()) {
-        globalThis.clearInterval(timer);
+    timerRef.current = globalThis.setInterval(() => {
+      if (!updateRoundTimer() && timerRef.current) {
+        globalThis.clearInterval(timerRef.current);
+        timerRef.current = null;
       }
     }, 1000);
 
-    return () => globalThis.clearInterval(timer); // Cleanup
+    return () => {
+      if (timerRef.current) {
+        globalThis.clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
   }, [hasSubmittedGuess, session.round_started]);
 
   if (isLoading || !isAuthorized) {
@@ -473,7 +478,7 @@ const GamePage: React.FC = () => {
                 <div className="game-guess-readout">
                   <span className="game-map-header-eyebrow">Selected Guess</span>
                   <strong className="game-guess-readout-value">
-                  {selectedGuess ? `${selectedGuess.latitude}, ${selectedGuess.normalizedLongitude}`: "No guess placed yet"}
+                    {selectedGuess ? `${selectedGuess.latitude}, ${selectedGuess.normalizedLongitude}` : "No guess placed yet"}
                   </strong>
                 </div>
 
