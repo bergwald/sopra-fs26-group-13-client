@@ -962,6 +962,8 @@ a {
 
 .home-region-modal {
   max-width: 42rem;
+  max-height: min(90dvh, 48rem);
+  overflow-y: auto;
 }
 
 .home-region-grid {
@@ -2174,6 +2176,20 @@ a {
 
   .home-region-grid {
     grid-template-columns: 1fr;
+  }
+
+  .home-region-modal {
+    max-width: 24rem;
+    max-height: min(88dvh, 36rem);
+    padding: 28px 20px;
+  }
+
+  .home-region-option {
+    gap: 10px;
+  }
+
+  .home-region-image {
+    aspect-ratio: 16 / 8;
   }
 
   .home-player-avatar {
