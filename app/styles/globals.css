@@ -2175,7 +2175,9 @@ a {
   }
 
   .home-region-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
   }
 
   .home-region-modal {
@@ -2185,11 +2187,15 @@ a {
   }
 
   .home-region-option {
-    gap: 10px;
+    gap: 8px;
   }
 
   .home-region-image {
-    aspect-ratio: 16 / 8;
+    aspect-ratio: 1 / 1;
+  }
+
+  .home-region-label {
+    font-size: 0.9rem;
   }
 
   .home-player-avatar {
