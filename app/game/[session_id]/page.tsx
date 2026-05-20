@@ -47,7 +47,7 @@ const MASCOT_IMAGES: Record<number, string> = {
 const DEFAULT_SESSION: GameSession = {
   session_id: "sample-session",
   expiry_date: new Date(Date.now() + 1000 * 60 * 2 + 1000 * 17).toISOString(),
-  round_started: new Date(Date.now() + 1000 * 60 * 2 + 1000 * 17).toISOString(),
+  round_started: "",
   round_number: 1,
   total_rounds: TOTAL_ROUNDS,
   mode: "singleplayer",
@@ -328,7 +328,7 @@ const GamePage: React.FC = () => {
   };
 
   React.useEffect(() => {
-    if (!session.round_started) return;
+    if (!session.round_started || !isAuthorized || isLoading) return;
 
     if (timerRef.current) {
       globalThis.clearInterval(timerRef.current);
@@ -369,7 +369,7 @@ const GamePage: React.FC = () => {
         timerRef.current = null;
       }
     };
-  }, [hasSubmittedGuess, session.round_started]);
+  }, [hasSubmittedGuess, session.round_started, isAuthorized]);
 
   if (isLoading || !isAuthorized) {
     return (
