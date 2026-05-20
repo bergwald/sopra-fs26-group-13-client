@@ -111,10 +111,11 @@ const UserSettingsPage: React.FC = () => {
         }
 
         if (error instanceof Error) {
-          setErrorMessage(error.message);
+          alert(`Profile could not be loaded:\n${error.message}`);
         } else {
-          setErrorMessage("Profile could not be loaded. Please try again.");
+          alert("Profile could not be loaded. Please try again.");
         }
+        router.replace(`/users/${parsedRouteUserId}`);
       }
     };
 
@@ -220,7 +221,7 @@ const UserSettingsPage: React.FC = () => {
       }
 
       if (appError.status === 400) {
-        setErrorMessage("Please check your input and try again.");
+        setErrorMessage(appError.message);
         return;
       }
 
@@ -328,6 +329,7 @@ const UserSettingsPage: React.FC = () => {
                   id="bio"
                   rows={3}
                   value={formValues.bio}
+                  maxLength={280}
                   className="edit-profile-input edit-profile-textarea"
                   onChange={(event) =>
                     setFormValues((previousValues) => ({
@@ -335,6 +337,9 @@ const UserSettingsPage: React.FC = () => {
                       bio: event.target.value,
                     }))}
                 />
+                <p className="edit-profile-avatar-hint">
+                  {formValues.bio.length}/280 characters
+                </p>
               </div>
 
               <div className="login-field-group edit-profile-password-field">

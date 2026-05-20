@@ -191,8 +191,17 @@ const HomePage: React.FC = () => {
     } catch (error) {
       const appError = error as ApplicationError;
 
-      if (appError.status === 401 || appError.status === 403) {
+      if (appError.status === 401) {
         router.push("/login");
+        return;
+      }
+
+      if (appError.status === 403) {
+        alert(
+          action === "singleplayer"
+            ? `You cannot start this singleplayer session:\n${appError.message}`
+            : `You cannot create this multiplayer session:\n${appError.message}`,
+        );
         return;
       }
 
@@ -277,8 +286,13 @@ const HomePage: React.FC = () => {
     } catch (error) {
       const appError = error as ApplicationError;
 
-      if (appError.status === 401 || appError.status === 403) {
+      if (appError.status === 401) {
         router.push("/login");
+        return;
+      }
+
+      if (appError.status === 403) {
+        alert(`You cannot join this session:\n${appError.message}`);
         return;
       }
 

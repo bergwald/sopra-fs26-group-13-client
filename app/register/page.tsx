@@ -38,7 +38,7 @@ const RegisterPage: React.FC = () => {
       if (appError.status === 409) {
         setErrorMessage("This username is already taken.");
       } else if (appError.status === 400) {
-        setErrorMessage("Please check your input and try again.");
+        setErrorMessage(appError.message);
       } else if (error instanceof Error) {
         setErrorMessage(error.message);
       } else {
@@ -161,6 +161,9 @@ const RegisterPage: React.FC = () => {
                   </label>
                   <Form.Item
                     name="bio"
+                    rules={[
+                      { max: 280, message: "Bio must be at most 280 characters." },
+                    ]}
                     style={{ marginBottom: 0 }}
                   >
                     <Input.TextArea
