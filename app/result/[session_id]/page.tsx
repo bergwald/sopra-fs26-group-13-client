@@ -183,7 +183,6 @@ const ResultPage: React.FC = () => {
   React.useEffect(() => {
     const shouldPoll = !isLoading &&
       sessionUser &&
-      completedRoundNumber < TOTAL_ROUNDS &&
       sessionUser.roundNumber <= TOTAL_ROUNDS;
 
     if (!shouldPoll) {
