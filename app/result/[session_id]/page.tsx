@@ -53,6 +53,13 @@ const isValidCoordinatePair = (
     longitude <= 180;
 };
 
+const isNoGuessCoordinatePair = (
+  latitude: number | undefined,
+  longitude: number | undefined,
+): boolean => {
+  return latitude === -1 && longitude === -1;
+};
+
 const ResultPage: React.FC = () => {
   const apiService = useApi();
   const router = useRouter();
@@ -150,7 +157,11 @@ const ResultPage: React.FC = () => {
     if (!sessionUsers || !roundResult) return [];
   
     return sessionUsers
-      .filter((u) => u.guessSubmitted)
+      .filter((u) =>
+        u.guessSubmitted &&
+        isValidCoordinatePair(u.guessLatitude, u.guessLongitude) &&
+        !isNoGuessCoordinatePair(u.guessLatitude, u.guessLongitude)
+      )
       .map((u) => ({
         lat: u.guessLatitude,
         lng: u.guessLongitude,
