@@ -4,7 +4,7 @@
 
 ## Introduction
 
-MountainGuessr is a GeoGuessr-style web game built for the Software Engineering Praktikum course at UZH. Players explore a Google Street View panorama, place a guess on a world map, and receive a score based on the distance to the real location. The client provides the user interface for account management, session creation, multiplayer lobbies, timed guessing rounds, and round results.
+MountainGuessr is a GeoGuessr-style web game built for the *Software Engineering Praktikum* course at UZH. Players explore a Google Street View panorama, place a guess on a world map, and receive a score based on the distance to the real location. The client provides the user interface for account management, session creation, multiplayer lobbies, timed guessing rounds, and round results.
 
 The motivation is to make a fun multiplayer game about recognising mountains.
 
